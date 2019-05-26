@@ -61,6 +61,8 @@ func (st *Struct) AddToExtends(fType string) {
 	st.Extends = append(st.Extends, fType)
 }
 
+//AddField adds a field into this structure. It parses the ast.Field and extract all
+//needed information
 func (st *Struct) AddField(field *ast.Field) {
 	if field.Names != nil {
 		st.Fields = append(st.Fields, &Field{

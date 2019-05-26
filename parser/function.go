@@ -12,7 +12,7 @@ type Function struct {
 	ReturnValues []string
 }
 
-//Returns true if the two functions have the same signature (parameter names are not checked)
+//SignturesAreEqual Returns true if the two functions have the same signature (parameter names are not checked)
 func (f *Function) SignturesAreEqual(function *Function) bool {
 	result := true
 	result = result && (function.Name == f.Name)
