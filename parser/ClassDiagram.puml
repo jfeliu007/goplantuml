@@ -1,14 +1,5 @@
 @startuml
 namespace parser {
-    class Field {
-        + Name string
-        + Type string
-
-    }
-    class LineStringBuilder {
-        + WriteLineWithDepth(depth int, str string) 
-
-    }
     class ClassParser {
         - structure <font color=blue>map</font>[string]<font color=blue>map</font>[string]*Struct
         - currentPackageName string
@@ -17,6 +8,12 @@ namespace parser {
 
         - parsePackage(node ast.Node) 
         - parseFileDeclarations(node ast.Decl) 
+        - renderStructures(pack string, structures <font color=blue>map</font>[string]*Struct, str *LineStringBuilder) 
+        - renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder) 
+        - renderCompositions(structure *Struct, name string, composition *LineStringBuilder) 
+        - renderExtends(structure *Struct, name string, extends *LineStringBuilder) 
+        - renderStructMethods(structure *Struct, privateMethods *LineStringBuilder, publicMethods *LineStringBuilder) 
+        - renderStructFields(structure *Struct, privateFields *LineStringBuilder, publicFields *LineStringBuilder) 
         - getOrCreateStruct(name string) 
         - getStruct(structName string) 
 
@@ -44,6 +41,15 @@ namespace parser {
         + ReturnValues []string
 
         + SignturesAreEqual(function *Function) 
+
+    }
+    class Field {
+        + Name string
+        + Type string
+
+    }
+    class LineStringBuilder {
+        + WriteLineWithDepth(depth int, str string) 
 
     }
 }

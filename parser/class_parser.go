@@ -164,80 +164,107 @@ func (p *ClassParser) Render() string {
 	str := &LineStringBuilder{}
 	str.WriteLineWithDepth(0, "@startuml")
 	for pack, structures := range p.structure {
-		composition := &LineStringBuilder{}
-		extends := &LineStringBuilder{}
-		if len(structures) > 0 {
-			str.WriteLineWithDepth(0, fmt.Sprintf(`namespace %s {`, pack))
-			for name, structure := range structures {
-				privateFields := &LineStringBuilder{}
-				publicFields := &LineStringBuilder{}
-				privateMethods := &LineStringBuilder{}
-				publicMethods := &LineStringBuilder{}
-				str.WriteLineWithDepth(1, fmt.Sprintf(`%s %s {`, structure.Type, name))
-				for _, field := range structure.Fields {
-					accessModifier := "+"
-					if unicode.IsLower(rune(field.Name[0])) {
-						accessModifier = "-"
-					}
-					if accessModifier == "-" {
-						privateFields.WriteLineWithDepth(2, fmt.Sprintf(`%s %s %s`, accessModifier, field.Name, field.Type))
-					} else {
-						publicFields.WriteLineWithDepth(2, fmt.Sprintf(`%s %s %s`, accessModifier, field.Name, field.Type))
-					}
-				}
-				for _, c := range structure.Composition {
-					if !strings.Contains(c, ".") {
-						c = fmt.Sprintf("%s.%s", structure.PackageName, c)
-					}
-					composition.WriteLineWithDepth(0, fmt.Sprintf(`%s *-- %s.%s`, c, pack, name))
-				}
-				for _, c := range structure.Extends {
-					if !strings.Contains(c, ".") {
-						c = fmt.Sprintf("%s.%s", structure.PackageName, c)
-					}
-					extends.WriteLineWithDepth(0, fmt.Sprintf(`%s <|-- %s.%s`, c, pack, name))
-				}
-				for _, method := range structure.Functions {
-					accessModifier := "+"
-					if unicode.IsLower(rune(method.Name[0])) {
-						accessModifier = "-"
-					}
-					parameterList := make([]string, 0)
-					for _, p := range method.Parameters {
-						parameterList = append(parameterList, fmt.Sprintf("%s %s", p.Name, p.Type))
-					}
-					returnValues := ""
-					if len(method.ReturnValues) > 1 {
-						returnValues = fmt.Sprintf("(%s)", strings.Join(method.ReturnValues, ", "))
-					}
-					if accessModifier == "-" {
-						privateMethods.WriteLineWithDepth(2, fmt.Sprintf(`%s %s(%s) %s`, accessModifier, method.Name, strings.Join(parameterList, ", "), returnValues))
-					} else {
-						publicMethods.WriteLineWithDepth(2, fmt.Sprintf(`%s %s(%s) %s`, accessModifier, method.Name, strings.Join(parameterList, ", "), returnValues))
-					}
-				}
-				if privateFields.Len() > 0 {
-					str.WriteLineWithDepth(0, privateFields.String())
-				}
-				if publicFields.Len() > 0 {
-					str.WriteLineWithDepth(0, publicFields.String())
-				}
-				if privateMethods.Len() > 0 {
-					str.WriteLineWithDepth(0, privateMethods.String())
-				}
-				if publicMethods.Len() > 0 {
-					str.WriteLineWithDepth(0, publicMethods.String())
-				}
-				str.WriteLineWithDepth(1, fmt.Sprintf(`}`))
-			}
-			str.WriteLineWithDepth(0, fmt.Sprintf(`}`))
-			str.WriteLineWithDepth(0, composition.String())
-			str.WriteLineWithDepth(0, extends.String())
-		}
+		p.renderStructures(pack, structures, str)
 
 	}
 	str.WriteString("@enduml")
 	return str.String()
+}
+
+func (p *ClassParser) renderStructures(pack string, structures map[string]*Struct, str *LineStringBuilder) {
+	if len(structures) > 0 {
+		composition := &LineStringBuilder{}
+		extends := &LineStringBuilder{}
+		str.WriteLineWithDepth(0, fmt.Sprintf(`namespace %s {`, pack))
+		for name, structure := range structures {
+			p.renderStructure(structure, pack, name, str, composition, extends)
+		}
+		str.WriteLineWithDepth(0, fmt.Sprintf(`}`))
+		str.WriteLineWithDepth(0, composition.String())
+		str.WriteLineWithDepth(0, extends.String())
+	}
+}
+
+func (p *ClassParser) renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder) {
+
+	privateFields := &LineStringBuilder{}
+	publicFields := &LineStringBuilder{}
+	privateMethods := &LineStringBuilder{}
+	publicMethods := &LineStringBuilder{}
+	str.WriteLineWithDepth(1, fmt.Sprintf(`%s %s {`, structure.Type, name))
+	p.renderStructFields(structure, privateFields, publicFields)
+	p.renderStructMethods(structure, privateMethods, publicMethods)
+	p.renderCompositions(structure, name, composition)
+	p.renderExtends(structure, name, extends)
+	if privateFields.Len() > 0 {
+		str.WriteLineWithDepth(0, privateFields.String())
+	}
+	if publicFields.Len() > 0 {
+		str.WriteLineWithDepth(0, publicFields.String())
+	}
+	if privateMethods.Len() > 0 {
+		str.WriteLineWithDepth(0, privateMethods.String())
+	}
+	if publicMethods.Len() > 0 {
+		str.WriteLineWithDepth(0, publicMethods.String())
+	}
+	str.WriteLineWithDepth(1, fmt.Sprintf(`}`))
+}
+
+func (p *ClassParser) renderCompositions(structure *Struct, name string, composition *LineStringBuilder) {
+
+	for _, c := range structure.Composition {
+		if !strings.Contains(c, ".") {
+			c = fmt.Sprintf("%s.%s", structure.PackageName, c)
+		}
+		composition.WriteLineWithDepth(0, fmt.Sprintf(`%s *-- %s.%s`, c, structure.PackageName, name))
+	}
+}
+func (p *ClassParser) renderExtends(structure *Struct, name string, extends *LineStringBuilder) {
+
+	for _, c := range structure.Extends {
+		if !strings.Contains(c, ".") {
+			c = fmt.Sprintf("%s.%s", structure.PackageName, c)
+		}
+		extends.WriteLineWithDepth(0, fmt.Sprintf(`%s <|-- %s.%s`, c, structure.PackageName, name))
+	}
+}
+
+func (p *ClassParser) renderStructMethods(structure *Struct, privateMethods *LineStringBuilder, publicMethods *LineStringBuilder) {
+
+	for _, method := range structure.Functions {
+		accessModifier := "+"
+		if unicode.IsLower(rune(method.Name[0])) {
+			accessModifier = "-"
+		}
+		parameterList := make([]string, 0)
+		for _, p := range method.Parameters {
+			parameterList = append(parameterList, fmt.Sprintf("%s %s", p.Name, p.Type))
+		}
+		returnValues := ""
+		if len(method.ReturnValues) > 1 {
+			returnValues = fmt.Sprintf("(%s)", strings.Join(method.ReturnValues, ", "))
+		}
+		if accessModifier == "-" {
+			privateMethods.WriteLineWithDepth(2, fmt.Sprintf(`%s %s(%s) %s`, accessModifier, method.Name, strings.Join(parameterList, ", "), returnValues))
+		} else {
+			publicMethods.WriteLineWithDepth(2, fmt.Sprintf(`%s %s(%s) %s`, accessModifier, method.Name, strings.Join(parameterList, ", "), returnValues))
+		}
+	}
+}
+
+func (p *ClassParser) renderStructFields(structure *Struct, privateFields *LineStringBuilder, publicFields *LineStringBuilder) {
+	for _, field := range structure.Fields {
+		accessModifier := "+"
+		if unicode.IsLower(rune(field.Name[0])) {
+			accessModifier = "-"
+		}
+		if accessModifier == "-" {
+			privateFields.WriteLineWithDepth(2, fmt.Sprintf(`%s %s %s`, accessModifier, field.Name, field.Type))
+		} else {
+			publicFields.WriteLineWithDepth(2, fmt.Sprintf(`%s %s %s`, accessModifier, field.Name, field.Type))
+		}
+	}
 }
 
 // Returns an initialized struct of the given name or returns the existing one if it was already created
