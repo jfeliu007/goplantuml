@@ -1,11 +1,8 @@
 @startuml
 namespace parser {
-    class Struct {
-        + Functions []*Function
-        + Fields []*Parameter
+    class Field {
+        + Name string
         + Type string
-        + Composition []string
-        + Extends []string
 
     }
     class LineStringBuilder {
@@ -18,30 +15,35 @@ namespace parser {
         - allInterfaces <font color=blue>map</font>[string]<font color=blue>struct</font>{}
         - allStructs <font color=blue>map</font>[string]<font color=blue>struct</font>{}
 
-        - structImplementsInterface(st *Struct, inter *Struct) 
         - parsePackage(node ast.Node) 
         - parseFileDeclarations(node ast.Decl) 
-        - addMethodToStruct(s *Struct, method *ast.Field) 
-        - getFunction(f *ast.FuncType, name string) 
-        - addFieldToStruct(s *Struct, field *ast.Field) 
-        - addToComposition(s *Struct, fType string) 
-        - addToExtends(s *Struct, fType string) 
         - getOrCreateStruct(name string) 
         - getStruct(structName string) 
-        - getFieldType(exp ast.Expr, includePackageName bool) 
 
         + Render() 
 
     }
-    class Parameter {
-        + Name string
+    class Struct {
+        + PackageName string
+        + Functions []*Function
+        + Fields []*Field
         + Type string
+        + Composition []string
+        + Extends []string
+
+        + ImplementsInterface(inter *Struct) 
+        + AddToComposition(fType string) 
+        + AddToExtends(fType string) 
+        + AddField(field *ast.Field) 
+        + AddMethod(method *ast.Field) 
 
     }
     class Function {
         + Name string
-        + Parameters []*Parameter
+        + Parameters []*Field
         + ReturnValues []string
+
+        + SignturesAreEqual(function *Function) 
 
     }
 }
