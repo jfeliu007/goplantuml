@@ -78,7 +78,7 @@ func (st *Struct) AddField(field *ast.Field) {
 	}
 }
 
-// Parse the Field and if it is an ast.FuncType, then add the methods into the structure
+//AddMethod Parse the Field and if it is an ast.FuncType, then add the methods into the structure
 func (st *Struct) AddMethod(method *ast.Field) {
 	f, ok := method.Type.(*ast.FuncType)
 	if !ok {
