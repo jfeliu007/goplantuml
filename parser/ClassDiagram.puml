@@ -1,0 +1,51 @@
+@startuml
+namespace parser {
+    class Struct {
+        + Functions []*Function
+        + Fields []*Parameter
+        + Type string
+        + Composition []string
+        + Extends []string
+
+    }
+    class LineStringBuilder {
+        + WriteLineWithDepth(depth int, str string) 
+
+    }
+    class ClassParser {
+        - structure <font color=blue>map</font>[string]<font color=blue>map</font>[string]*Struct
+        - currentPackageName string
+        - allInterfaces <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+        - allStructs <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+
+        - structImplementsInterface(st *Struct, inter *Struct) 
+        - parsePackage(node ast.Node) 
+        - parseFileDeclarations(node ast.Decl) 
+        - addMethodToStruct(s *Struct, method *ast.Field) 
+        - getFunction(f *ast.FuncType, name string) 
+        - addFieldToStruct(s *Struct, field *ast.Field) 
+        - addToComposition(s *Struct, fType string) 
+        - addToExtends(s *Struct, fType string) 
+        - getOrCreateStruct(name string) 
+        - getStruct(structName string) 
+        - getFieldType(exp ast.Expr, includePackageName bool) 
+
+        + Render() 
+
+    }
+    class Parameter {
+        + Name string
+        + Type string
+
+    }
+    class Function {
+        + Name string
+        + Parameters []*Parameter
+        + ReturnValues []string
+
+    }
+}
+strings.Builder *-- parser.LineStringBuilder
+
+
+@enduml
