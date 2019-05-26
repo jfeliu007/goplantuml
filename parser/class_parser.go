@@ -6,7 +6,7 @@ function.
 Pass the directory where the .go files are and the parser will analyze the code and build a structure
 containing the information it needs to Render the class diagram.
 
-call teh Render() function and this will return a string with the class diagram.
+call the Render() function and this will return a string with the class diagram.
 
 See github.com/jfeliu007/goplantuml/cmd/goplantuml/main.go for a command that uses this functions and outputs the text to
 the console.
@@ -31,7 +31,7 @@ type LineStringBuilder struct {
 
 const tab = "    "
 
-//WriteLineWithDepth will write the given text with added tabs at the begining into the string builder.
+//WriteLineWithDepth will write the given text with added tabs at the beginning into the string builder.
 func (lsb *LineStringBuilder) WriteLineWithDepth(depth int, str string) {
 	lsb.WriteString(strings.Repeat(tab, depth))
 	lsb.WriteString(str)

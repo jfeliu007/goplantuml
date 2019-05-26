@@ -17,14 +17,14 @@ func TestStructImplementsInterface(t *testing.T) {
 			name: "Correct implementation",
 			structure: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "foo",
 						Parameters: []*Field{
-							&Field{
+							{
 								Name: "a",
 								Type: "int",
 							},
-							&Field{
+							{
 								Name: "b",
 								Type: "string",
 							},
@@ -36,13 +36,13 @@ func TestStructImplementsInterface(t *testing.T) {
 			},
 			inter: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "foo",
 						Parameters: []*Field{
-							&Field{
+							{
 								Type: "int",
 							},
-							&Field{
+							{
 								Type: "string",
 							},
 						},
@@ -56,14 +56,14 @@ func TestStructImplementsInterface(t *testing.T) {
 			name: "Parameters not in order",
 			structure: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "foo",
 						Parameters: []*Field{
-							&Field{
+							{
 								Name: "a",
 								Type: "int",
 							},
-							&Field{
+							{
 								Name: "b",
 								Type: "string",
 							},
@@ -75,14 +75,14 @@ func TestStructImplementsInterface(t *testing.T) {
 			},
 			inter: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "foo",
 						Parameters: []*Field{
-							&Field{
+							{
 								Name: "b",
 								Type: "string",
 							},
-							&Field{
+							{
 								Name: "a",
 								Type: "int",
 							},
@@ -97,14 +97,14 @@ func TestStructImplementsInterface(t *testing.T) {
 			name: "Empty Interface",
 			structure: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "foo",
 						Parameters: []*Field{
-							&Field{
+							{
 								Name: "a",
 								Type: "int",
 							},
-							&Field{
+							{
 								Name: "b",
 								Type: "string",
 							},
@@ -123,14 +123,14 @@ func TestStructImplementsInterface(t *testing.T) {
 			name: "Different Function Names",
 			structure: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "foo",
 						Parameters: []*Field{
-							&Field{
+							{
 								Name: "a",
 								Type: "int",
 							},
-							&Field{
+							{
 								Name: "b",
 								Type: "string",
 							},
@@ -142,14 +142,14 @@ func TestStructImplementsInterface(t *testing.T) {
 			},
 			inter: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "bar",
 						Parameters: []*Field{
-							&Field{
+							{
 								Name: "a",
 								Type: "int",
 							},
-							&Field{
+							{
 								Name: "b",
 								Type: "string",
 							},
@@ -164,14 +164,14 @@ func TestStructImplementsInterface(t *testing.T) {
 			name: "Return value different",
 			structure: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "foo",
 						Parameters: []*Field{
-							&Field{
+							{
 								Name: "a",
 								Type: "int",
 							},
-							&Field{
+							{
 								Name: "b",
 								Type: "string",
 							},
@@ -183,13 +183,13 @@ func TestStructImplementsInterface(t *testing.T) {
 			},
 			inter: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "foo",
 						Parameters: []*Field{
-							&Field{
+							{
 								Type: "int",
 							},
-							&Field{
+							{
 								Type: "string",
 							},
 						},
@@ -216,13 +216,13 @@ func TestStructImplementsInterface(t *testing.T) {
 func TestAddToComposition(t *testing.T) {
 	st := &Struct{
 		Functions: []*Function{
-			&Function{
+			{
 				Name: "foo",
 				Parameters: []*Field{
-					&Field{
+					{
 						Type: "int",
 					},
-					&Field{
+					{
 						Type: "string",
 					},
 				},
@@ -257,13 +257,13 @@ func TestAddToComposition(t *testing.T) {
 func TestAddToExtension(t *testing.T) {
 	st := &Struct{
 		Functions: []*Function{
-			&Function{
+			{
 				Name: "foo",
 				Parameters: []*Field{
-					&Field{
+					{
 						Type: "int",
 					},
-					&Field{
+					{
 						Type: "string",
 					},
 				},
@@ -312,7 +312,7 @@ func TestAddField(t *testing.T) {
 	st := &Struct{
 		PackageName: "main",
 		Functions: []*Function{
-			&Function{
+			{
 				Name:         "foo",
 				Parameters:   []*Field{},
 				ReturnValues: []string{"error", "int"},
@@ -322,7 +322,7 @@ func TestAddField(t *testing.T) {
 	}
 	st.AddField(&ast.Field{
 		Names: []*ast.Ident{
-			&ast.Ident{
+			{
 				Name: "foo",
 			},
 		},
@@ -361,7 +361,7 @@ func TestAddMethod(t *testing.T) {
 	}
 	st.AddMethod(&ast.Field{
 		Names: []*ast.Ident{
-			&ast.Ident{
+			{
 				Name: "foo",
 			},
 		},
@@ -372,16 +372,16 @@ func TestAddMethod(t *testing.T) {
 	}
 	st.AddMethod(&ast.Field{
 		Names: []*ast.Ident{
-			&ast.Ident{
+			{
 				Name: "foo",
 			},
 		},
 		Type: &ast.FuncType{
 			Params: &ast.FieldList{
 				List: []*ast.Field{
-					&ast.Field{
+					{
 						Names: []*ast.Ident{
-							&ast.Ident{
+							{
 								Name: "var1",
 							},
 						},
@@ -395,7 +395,7 @@ func TestAddMethod(t *testing.T) {
 			},
 			Results: &ast.FieldList{
 				List: []*ast.Field{
-					&ast.Field{
+					{
 						Names: nil,
 						Type: &ast.StarExpr{
 							X: &ast.Ident{
@@ -413,7 +413,7 @@ func TestAddMethod(t *testing.T) {
 	testFunction := &Function{
 		Name: "foo",
 		Parameters: []*Field{
-			&Field{
+			{
 				Name: "var1",
 				Type: "*FooComposed",
 			},

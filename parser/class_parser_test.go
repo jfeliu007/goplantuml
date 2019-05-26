@@ -15,8 +15,6 @@ func TestLineBuilder(t *testing.T) {
 
 }
 
-
-
 func TestGetOrCreateStruct(t *testing.T) {
 	tt := []struct {
 		name          string
@@ -33,13 +31,13 @@ func TestGetOrCreateStruct(t *testing.T) {
 			structureName: "Foo",
 			structure: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "foo",
 						Parameters: []*Field{
-							&Field{
+							{
 								Type: "int",
 							},
-							&Field{
+							{
 								Type: "string",
 							},
 						},
@@ -56,13 +54,13 @@ func TestGetOrCreateStruct(t *testing.T) {
 			structureName: "Foo",
 			structure: &Struct{
 				Functions: []*Function{
-					&Function{
+					{
 						Name: "foo",
 						Parameters: []*Field{
-							&Field{
+							{
 								Type: "int",
 							},
-							&Field{
+							{
 								Type: "string",
 							},
 						},
@@ -116,13 +114,13 @@ func TestGetOrCreateStruct(t *testing.T) {
 func TestGetStruct(t *testing.T) {
 	st := &Struct{
 		Functions: []*Function{
-			&Function{
+			{
 				Name: "foo",
 				Parameters: []*Field{
-					&Field{
+					{
 						Type: "int",
 					},
-					&Field{
+					{
 						Type: "string",
 					},
 				},
@@ -162,4 +160,3 @@ func getEmptyParser(packageName string) *ClassParser {
 	result.structure[packageName] = make(map[string]*Struct)
 	return result
 }
-
