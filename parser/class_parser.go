@@ -1,3 +1,17 @@
+/*
+Package parser generates PlantUml http://plantuml.com/ Class diagrams for your golang projects
+The main structure is the ClassParser which you can generate by calling the NewClassDiagram(dir)
+function.
+
+Pass the directory where the .go files are and the parser will analyze the code and build a structure
+containing the information it needs to Render the class diagram.
+
+call teh Render() function and this will return a string with the class diagram.
+
+See github.com/jfeliu007/goplantuml/cmd/goplantuml/main.go for a command that uses this functions and outputs the text to
+the console.
+
+*/
 package parser
 
 import (
