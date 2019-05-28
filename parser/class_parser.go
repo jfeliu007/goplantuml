@@ -147,6 +147,9 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 			if structure.Type == "" {
 				structure.Type = "class"
 			}
+
+			fullName := fmt.Sprintf("%s.%s", p.currentPackageName, theType)
+			p.allStructs[fullName] = struct{}{}
 			structure.AddMethod(&ast.Field{
 				Names:   []*ast.Ident{decl.Name},
 				Doc:     decl.Doc,
@@ -191,7 +194,11 @@ func (p *ClassParser) renderStructure(structure *Struct, pack string, name strin
 	publicFields := &LineStringBuilder{}
 	privateMethods := &LineStringBuilder{}
 	publicMethods := &LineStringBuilder{}
-	str.WriteLineWithDepth(1, fmt.Sprintf(`%s %s {`, structure.Type, name))
+	sType := ""
+	if structure.Type == "class" {
+		sType = "<< (S,Aquamarine) >>"
+	}
+	str.WriteLineWithDepth(1, fmt.Sprintf(`%s %s %s {`, structure.Type, name, sType))
 	p.renderStructFields(structure, privateFields, publicFields)
 	p.renderStructMethods(structure, privateMethods, publicMethods)
 	p.renderCompositions(structure, name, composition)
