@@ -13,7 +13,6 @@ type Field struct {
 	Type string
 }
 
-
 //Returns a string representation of the given expression if it was recognized.
 //Refer to the implementation to see the different string representations.
 func getFieldType(exp ast.Expr, packageName string) string {

@@ -1,6 +1,23 @@
-@startuml
+*ast.Ident*ast.ArrayType*ast.StarExpr*ast.Ident*ast.ArrayType*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.Ident*ast.Ident*ast.SelectorExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.Ident*ast.MapType*ast.Ident*ast.MapType*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.MapType*ast.Ident*ast.StructType*ast.MapType*ast.Ident*ast.StructType*ast.StarExpr*ast.Ident*ast.SelectorExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.SelectorExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.MapType*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.ArrayType*ast.StarExpr*ast.Ident*ast.ArrayType*ast.StarExpr*ast.Ident*ast.Ident*ast.ArrayType*ast.Ident*ast.ArrayType*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.StarExpr*ast.Ident*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.SelectorExpr*ast.Ident*ast.StarExpr*ast.Ident*ast.StarExpr*ast.SelectorExpr*ast.Ident@startuml
 namespace parser {
-    class ClassParser {
+    class Function << (S,Aquamarine) >> {
+        + Name string
+        + Parameters []*Field
+        + ReturnValues []string
+
+        + SignturesAreEqual(function *Function) 
+
+    }
+    class Field << (S,Aquamarine) >> {
+        + Name string
+        + Type string
+
+    }
+    class LineStringBuilder << (S,Aquamarine) >> {
+        + WriteLineWithDepth(depth int, str string) 
+
+    }
+    class ClassParser << (S,Aquamarine) >> {
         - structure <font color=blue>map</font>[string]<font color=blue>map</font>[string]*Struct
         - currentPackageName string
         - allInterfaces <font color=blue>map</font>[string]<font color=blue>struct</font>{}
@@ -20,7 +37,7 @@ namespace parser {
         + Render() 
 
     }
-    class Struct {
+    class Struct << (S,Aquamarine) >> {
         + PackageName string
         + Functions []*Function
         + Fields []*Field
@@ -33,23 +50,6 @@ namespace parser {
         + AddToExtends(fType string) 
         + AddField(field *ast.Field) 
         + AddMethod(method *ast.Field) 
-
-    }
-    class Function {
-        + Name string
-        + Parameters []*Field
-        + ReturnValues []string
-
-        + SignturesAreEqual(function *Function) 
-
-    }
-    class Field {
-        + Name string
-        + Type string
-
-    }
-    class LineStringBuilder {
-        + WriteLineWithDepth(depth int, str string) 
 
     }
 }
