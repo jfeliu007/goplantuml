@@ -28,7 +28,7 @@ goplantuml [-recursive] path/to/gofiles > diagram_file_name.puml
 
 #### Example
 ```
-goplantuml $GOPATH/github.com/jfeliu007/goplantuml/parser
+goplantuml $GOPATH/src/github.com/jfeliu007/goplantuml/parser
 ```
 ```
 // echoes
@@ -86,7 +86,7 @@ strings.Builder *-- parser.LineStringBuilder
 @enduml
 ```
 ```
-goplantuml $GOPATH/github.com/jfeliu007/goplantuml/parser > ClassDiagram.puml
+goplantuml $GOPATH/src/github.com/jfeliu007/goplantuml/parser > ClassDiagram.puml
 // Generates a file ClassDiagram.plum with the previous specifications
 ```
 
