@@ -87,5 +87,5 @@ goplantuml $GOPATH/github.com/jfeliu007/goplantuml/parser > ClassDiagram.puml
 // Generates a file ClassDiagram.plum with the previous specifications
 ```
 
-### The following diagram is generated based on the file in https://raw.githubusercontent.com/jfeliu007/goplantuml/master/parser/ClassDiagram.puml
-![Alt text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jfeliu007/goplantuml/master/parser/ClassDiagram.puml?raw=true "Title")
+### The following diagram is generated based on the file in https://raw.githubusercontent.com/jfeliu007/goplantuml/master/ClassDiagram.puml
+![Alt text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jfeliu007/goplantuml/master/ClassDiagram.puml?raw=true "Title")

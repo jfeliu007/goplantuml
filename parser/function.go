@@ -30,7 +30,7 @@ func (f *Function) SignturesAreEqual(function *Function) bool {
 
 // generate and return a function object from the given Functype. The names must be passed to this
 // function since the FuncType does not have this information
-func getFunction(f *ast.FuncType, name string) *Function {
+func getFunction(f *ast.FuncType, name string, aliases map[string]string) *Function {
 	function := &Function{
 		Name:         name,
 		Parameters:   make([]*Field, 0),
@@ -45,7 +45,7 @@ func getFunction(f *ast.FuncType, name string) *Function {
 			}
 			function.Parameters = append(function.Parameters, &Field{
 				Name: fieldName,
-				Type: getFieldType(pa.Type, ""),
+				Type: getFieldType(pa.Type, aliases),
 			})
 		}
 	}
@@ -53,7 +53,7 @@ func getFunction(f *ast.FuncType, name string) *Function {
 	results := f.Results
 	if results != nil {
 		for _, pa := range results.List {
-			function.ReturnValues = append(function.ReturnValues, getFieldType(pa.Type, ""))
+			function.ReturnValues = append(function.ReturnValues, getFieldType(pa.Type, aliases))
 		}
 	}
 	return function

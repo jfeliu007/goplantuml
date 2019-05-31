@@ -19,6 +19,8 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"os"
+	"path/filepath"
 	"strings"
 	"unicode"
 )
@@ -45,33 +47,38 @@ type ClassParser struct {
 	currentPackageName string
 	allInterfaces      map[string]struct{}
 	allStructs         map[string]struct{}
+	allImports         map[string]string
 }
 
 //NewClassDiagram returns a new classParser with which can Render the class diagram of
 // files int eh given directory
-func NewClassDiagram(directoryPath string) (*ClassParser, error) {
+func NewClassDiagram(directoryPath string, recursive bool) (*ClassParser, error) {
 	classParser := &ClassParser{
 		structure:     make(map[string]map[string]*Struct),
 		allInterfaces: make(map[string]struct{}),
 		allStructs:    make(map[string]struct{}),
+		allImports:    make(map[string]string),
 	}
-	fs := token.NewFileSet()
-	result, err := parser.ParseDir(fs, directoryPath, nil, 0)
-	if err != nil {
-		return nil, err
-	}
-	for _, v := range result {
-		classParser.parsePackage(v)
-	}
-	for s := range classParser.allStructs {
-		st := classParser.getStruct(s)
-		if st != nil {
-			for i := range classParser.allInterfaces {
-				inter := classParser.getStruct(i)
-				if st.ImplementsInterface(inter) {
-					st.AddToExtends(i)
-				}
+	if recursive {
+		err := filepath.Walk(directoryPath, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
 			}
+			if info.IsDir() {
+				if strings.HasPrefix(info.Name(), ".") {
+					return filepath.SkipDir
+				}
+				classParser.parseDirectory(path)
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := classParser.parseDirectory(directoryPath)
+		if err != nil {
+			return nil, err
 		}
 	}
 	return classParser, nil
@@ -87,11 +94,45 @@ func (p *ClassParser) parsePackage(node ast.Node) {
 	}
 	for fileName, f := range pack.Files {
 		if !strings.HasSuffix(fileName, "_test.go") {
+			for _, d := range f.Imports {
+				p.parseImports(d)
+			}
 			for _, d := range f.Decls {
 				p.parseFileDeclarations(d)
 			}
 		}
 	}
+}
+
+func (p *ClassParser) parseImports(impt *ast.ImportSpec) {
+	if impt.Name != nil {
+		splitPath := strings.Split(impt.Path.Value, "/")
+		s := strings.TrimRight(splitPath[len(splitPath)-1], `"`)
+		p.allImports[impt.Name.Name] = s
+	}
+}
+
+func (p *ClassParser) parseDirectory(directoryPath string) error {
+	fs := token.NewFileSet()
+	result, err := parser.ParseDir(fs, directoryPath, nil, 0)
+	if err != nil {
+		return err
+	}
+	for _, v := range result {
+		p.parsePackage(v)
+	}
+	for s := range p.allStructs {
+		st := p.getStruct(s)
+		if st != nil {
+			for i := range p.allInterfaces {
+				inter := p.getStruct(i)
+				if st.ImplementsInterface(inter) {
+					st.AddToExtends(i)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 //parse the given declaration looking for classes, interfaces, or member functions
@@ -108,15 +149,13 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 			case *ast.StructType:
 				declarationType = "class"
 				for _, f := range c.Fields.List {
-					p.getOrCreateStruct(typeName).AddField(f)
+					p.getOrCreateStruct(typeName).AddField(f, p.allImports)
 				}
-				break
 			case *ast.InterfaceType:
 				declarationType = "interface"
 				for _, f := range c.Methods.List {
-					p.getOrCreateStruct(typeName).AddMethod(f)
+					p.getOrCreateStruct(typeName).AddMethod(f, p.allImports)
 				}
-				break
 			default:
 				// Not needed for class diagrams (Imports, global variables, regular functions, etc)
 				return
@@ -130,16 +169,13 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 		switch declarationType {
 		case "interface":
 			p.allInterfaces[fullName] = struct{}{}
-			break
 		case "class":
 			p.allStructs[fullName] = struct{}{}
-			break
 		}
-		break
 	case *ast.FuncDecl:
 		if decl.Recv != nil {
 			// Only get in when the function is defined for a structure. Global functions are not needed for class diagram
-			theType := getFieldType(decl.Recv.List[0].Type, "")
+			theType := getFieldType(decl.Recv.List[0].Type, p.allImports)
 			if theType[0] == "*"[0] {
 				theType = theType[1:]
 			}
@@ -156,9 +192,8 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 				Type:    decl.Type,
 				Tag:     nil,
 				Comment: nil,
-			})
+			}, p.allImports)
 		}
-		break
 	}
 }
 

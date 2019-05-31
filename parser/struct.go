@@ -63,14 +63,14 @@ func (st *Struct) AddToExtends(fType string) {
 
 //AddField adds a field into this structure. It parses the ast.Field and extract all
 //needed information
-func (st *Struct) AddField(field *ast.Field) {
+func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
 	if field.Names != nil {
 		st.Fields = append(st.Fields, &Field{
 			Name: field.Names[0].Name,
-			Type: getFieldType(field.Type, ""),
+			Type: getFieldType(field.Type, aliases),
 		})
 	} else if field.Type != nil {
-		fType := getFieldType(field.Type, "")
+		fType := getFieldType(field.Type, aliases)
 		if fType[0] == "*"[0] {
 			fType = fType[1:]
 		}
@@ -79,11 +79,11 @@ func (st *Struct) AddField(field *ast.Field) {
 }
 
 //AddMethod Parse the Field and if it is an ast.FuncType, then add the methods into the structure
-func (st *Struct) AddMethod(method *ast.Field) {
+func (st *Struct) AddMethod(method *ast.Field, aliases map[string]string) {
 	f, ok := method.Type.(*ast.FuncType)
 	if !ok {
 		return
 	}
-	function := getFunction(f, method.Names[0].Name)
+	function := getFunction(f, method.Names[0].Name, aliases)
 	st.Functions = append(st.Functions, function)
 }
