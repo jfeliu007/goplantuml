@@ -9,7 +9,8 @@ golang
 ### Installing
 
 ```
-go get https://github.com/jfeliu007/goplantuml
+go get github.com/jfeliu007/goplantuml/parser
+go get github.com/jfeliu007/goplantuml/cmd/goplantuml
 cd $GOPATH/src/github.com/jfeliu007/goplantuml
 go install ./...
 ```
@@ -19,12 +20,14 @@ This will install the command goplantuml in your GOPATH bin folder.
 ### Usage
 
 ```
-$GOPATH/bin/goplantuml path/to/gofiles
+goplantuml [-recursive] path/to/gofiles
+```
+```
+goplantuml [-recursive] path/to/gofiles > diagram_file_name.puml
 ```
 
 #### Example
 ```
-//Provided the $GOPATH/bin folder is in the $PATH
 goplantuml $GOPATH/github.com/jfeliu007/goplantuml/parser
 ```
 ```
