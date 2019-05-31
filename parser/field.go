@@ -30,7 +30,7 @@ func getFieldType(exp ast.Expr, aliases map[string]string) string {
 	case *ast.MapType:
 		return fmt.Sprintf("<font color=blue>map</font>[%s]%s", getFieldType(v.Key, aliases), getFieldType(v.Value, aliases))
 	case *ast.StarExpr:
-		return fmt.Sprintf("%s", getFieldType(v.X, aliases))
+		return fmt.Sprintf("*%s", getFieldType(v.X, aliases))
 	case *ast.ChanType:
 		return fmt.Sprintf("<font color=blue>chan</font> %s", getFieldType(v.Value, aliases))
 	case *ast.StructType:

@@ -329,7 +329,7 @@ func TestAddField(t *testing.T) {
 		Type: &ast.Ident{
 			Name: "int",
 		},
-	})
+	}, make(map[string]string))
 	if len(st.Fields) != 1 {
 		t.Errorf("TestAddField: Expected st.Fields to have exactly one element but it has %d elements", len(st.Fields))
 	}
@@ -347,7 +347,7 @@ func TestAddField(t *testing.T) {
 				Name: "FooComposed",
 			},
 		},
-	})
+	}, make(map[string]string))
 	if !arrayContains(st.Composition, "FooComposed") {
 		t.Errorf("TestAddField: Expecting FooComposed to be part of the compositions ,but the array had %v", st.Composition)
 	}
@@ -366,7 +366,7 @@ func TestAddMethod(t *testing.T) {
 			},
 		},
 		Type: &ast.Ident{},
-	})
+	}, make(map[string]string))
 	if len(st.Functions) != 0 {
 		t.Errorf("TestAddMethod: Expected Functions array to be empty but it contains %v", st.Functions)
 	}
@@ -406,7 +406,7 @@ func TestAddMethod(t *testing.T) {
 				},
 			},
 		},
-	})
+	}, make(map[string]string))
 	if len(st.Functions) != 1 {
 		t.Errorf("TestAddMethod: Expected st.Functions to have exactly one element but it has %d elements", len(st.Functions))
 	}
