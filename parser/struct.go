@@ -11,8 +11,8 @@ type Struct struct {
 	Functions   []*Function
 	Fields      []*Field
 	Type        string
-	Composition []string
-	Extends     []string
+	Composition map[string]struct{}
+	Extends     map[string]struct{}
 }
 
 // ImplementsInterface returns true if the struct st conforms ot the given interface
@@ -45,7 +45,7 @@ func (st *Struct) AddToComposition(fType string) {
 	if fType[0] == "*"[0] {
 		fType = fType[1:]
 	}
-	st.Composition = append(st.Composition, fType)
+	st.Composition[fType] = struct{}{}
 }
 
 //AddToExtends Adds an extends relationship to this struct. We want to make sure that *ExampleStruct
@@ -58,7 +58,7 @@ func (st *Struct) AddToExtends(fType string) {
 	if fType[0] == "*"[0] {
 		fType = fType[1:]
 	}
-	st.Extends = append(st.Extends, fType)
+	st.Extends[fType] = struct{}{}
 }
 
 //AddField adds a field into this structure. It parses the ast.Field and extract all

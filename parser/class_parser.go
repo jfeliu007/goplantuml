@@ -255,7 +255,7 @@ func (p *ClassParser) renderStructure(structure *Struct, pack string, name strin
 
 func (p *ClassParser) renderCompositions(structure *Struct, name string, composition *LineStringBuilder) {
 
-	for _, c := range structure.Composition {
+	for c := range structure.Composition {
 		if !strings.Contains(c, ".") {
 			c = fmt.Sprintf("%s.%s", structure.PackageName, c)
 		}
@@ -264,7 +264,7 @@ func (p *ClassParser) renderCompositions(structure *Struct, name string, composi
 }
 func (p *ClassParser) renderExtends(structure *Struct, name string, extends *LineStringBuilder) {
 
-	for _, c := range structure.Extends {
+	for c := range structure.Extends {
 		if !strings.Contains(c, ".") {
 			c = fmt.Sprintf("%s.%s", structure.PackageName, c)
 		}
@@ -318,8 +318,8 @@ func (p *ClassParser) getOrCreateStruct(name string) *Struct {
 			Functions:   make([]*Function, 0),
 			Fields:      make([]*Field, 0),
 			Type:        "",
-			Composition: make([]string, 0),
-			Extends:     make([]string, 0),
+			Composition: make(map[string]struct{}, 0),
+			Extends:     make(map[string]struct{}, 0),
 		}
 		p.structure[p.currentPackageName][name] = result
 	}

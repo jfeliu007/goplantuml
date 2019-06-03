@@ -67,7 +67,7 @@ func getFieldType(exp ast.Expr, aliases map[string]string) string {
 		}
 		return fmt.Sprintf("<font color=blue>func</font>(%s) %s", strings.Join(params, ", "), returns)
 	case *ast.Ellipsis:
-		return fmt.Sprintf("<...%s", getFieldType(v.Elt, aliases))
+		return fmt.Sprintf("...%s", getFieldType(v.Elt, aliases))
 	}
 	return ""
 }
