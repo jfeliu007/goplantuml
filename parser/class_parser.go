@@ -81,6 +81,18 @@ func NewClassDiagram(directoryPath string, recursive bool) (*ClassParser, error)
 			return nil, err
 		}
 	}
+
+	for s := range classParser.allStructs {
+		st := classParser.getStruct(s)
+		if st != nil {
+			for i := range classParser.allInterfaces {
+				inter := classParser.getStruct(i)
+				if st.ImplementsInterface(inter) {
+					st.AddToExtends(i)
+				}
+			}
+		}
+	}
 	return classParser, nil
 }
 
@@ -120,17 +132,6 @@ func (p *ClassParser) parseDirectory(directoryPath string) error {
 	}
 	for _, v := range result {
 		p.parsePackage(v)
-	}
-	for s := range p.allStructs {
-		st := p.getStruct(s)
-		if st != nil {
-			for i := range p.allInterfaces {
-				inter := p.getStruct(i)
-				if st.ImplementsInterface(inter) {
-					st.AddToExtends(i)
-				}
-			}
-		}
 	}
 	return nil
 }
@@ -176,6 +177,7 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 		if decl.Recv != nil {
 			// Only get in when the function is defined for a structure. Global functions are not needed for class diagram
 			theType := getFieldType(decl.Recv.List[0].Type, p.allImports)
+			theType = replacePackageConstant(theType, "")
 			if theType[0] == "*"[0] {
 				theType = theType[1:]
 			}
@@ -284,8 +286,12 @@ func (p *ClassParser) renderStructMethods(structure *Struct, privateMethods *Lin
 			parameterList = append(parameterList, fmt.Sprintf("%s %s", p.Name, p.Type))
 		}
 		returnValues := ""
-		if len(method.ReturnValues) > 1 {
-			returnValues = fmt.Sprintf("(%s)", strings.Join(method.ReturnValues, ", "))
+		if len(method.ReturnValues) > 0 {
+			if len(method.ReturnValues) == 1 {
+				returnValues = method.ReturnValues[0]
+			} else {
+				returnValues = fmt.Sprintf("(%s)", strings.Join(method.ReturnValues, ", "))
+			}
 		}
 		if accessModifier == "-" {
 			privateMethods.WriteLineWithDepth(2, fmt.Sprintf(`%s %s(%s) %s`, accessModifier, method.Name, strings.Join(parameterList, ", "), returnValues))

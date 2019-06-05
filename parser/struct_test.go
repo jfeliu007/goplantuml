@@ -296,10 +296,10 @@ func TestAddToExtension(t *testing.T) {
 	}
 }
 
-func arrayContains(a []string, text string) bool {
+func arrayContains(a map[string]struct{}, text string) bool {
 
 	found := false
-	for _, v := range a {
+	for v := range a {
 		if v == text {
 			found = true
 			break
