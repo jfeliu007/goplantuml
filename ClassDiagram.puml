@@ -1,5 +1,30 @@
 @startuml
 namespace parser {
+    class Struct << (S,Aquamarine) >> {
+        + PackageName string
+        + Functions []*Function
+        + Fields []*Field
+        + Type string
+        + Composition <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+        + Extends <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+
+        + ImplementsInterface(inter *Struct) bool
+        + AddToComposition(fType string) 
+        + AddToExtends(fType string) 
+        + AddField(field *ast.Field, aliases <font color=blue>map</font>[string]string) 
+        + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
+
+    }
+    class Function << (S,Aquamarine) >> {
+        + Name string
+        + Parameters []*Field
+        + ReturnValues []string
+        + PackageName string
+        + FullNameReturnValues []string
+
+        + SignturesAreEqual(function *Function) bool
+
+    }
     class Field << (S,Aquamarine) >> {
         + Name string
         + Type string
@@ -19,43 +44,18 @@ namespace parser {
 
         - parsePackage(node ast.Node) 
         - parseImports(impt *ast.ImportSpec) 
-        - parseDirectory(directoryPath string) {packageName}error
+        - parseDirectory(directoryPath string) error
         - parseFileDeclarations(node ast.Decl) 
-        - renderStructures(pack string, structures <font color=blue>map</font>[string]*{packageName}Struct, str *{packageName}LineStringBuilder) 
-        - renderStructure(structure *{packageName}Struct, pack string, name string, str *{packageName}LineStringBuilder, composition *{packageName}LineStringBuilder, extends *{packageName}LineStringBuilder) 
-        - renderCompositions(structure *{packageName}Struct, name string, composition *{packageName}LineStringBuilder) 
-        - renderExtends(structure *{packageName}Struct, name string, extends *{packageName}LineStringBuilder) 
-        - renderStructMethods(structure *{packageName}Struct, privateMethods *{packageName}LineStringBuilder, publicMethods *{packageName}LineStringBuilder) 
-        - renderStructFields(structure *{packageName}Struct, privateFields *{packageName}LineStringBuilder, publicFields *{packageName}LineStringBuilder) 
-        - getOrCreateStruct(name string) *{packageName}Struct
-        - getStruct(structName string) *{packageName}Struct
+        - renderStructures(pack string, structures <font color=blue>map</font>[string]*Struct, str *LineStringBuilder) 
+        - renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder) 
+        - renderCompositions(structure *Struct, name string, composition *LineStringBuilder) 
+        - renderExtends(structure *Struct, name string, extends *LineStringBuilder) 
+        - renderStructMethods(structure *Struct, privateMethods *LineStringBuilder, publicMethods *LineStringBuilder) 
+        - renderStructFields(structure *Struct, privateFields *LineStringBuilder, publicFields *LineStringBuilder) 
+        - getOrCreateStruct(name string) *Struct
+        - getStruct(structName string) *Struct
 
         + Render() string
-
-    }
-    class Struct << (S,Aquamarine) >> {
-        + PackageName string
-        + Functions []*Function
-        + Fields []*Field
-        + Type string
-        + Composition <font color=blue>map</font>[string]<font color=blue>struct</font>{}
-        + Extends <font color=blue>map</font>[string]<font color=blue>struct</font>{}
-
-        + ImplementsInterface(inter *{packageName}Struct) bool
-        + AddToComposition(fType string) 
-        + AddToExtends(fType string) 
-        + AddField(field *ast.Field, aliases <font color=blue>map</font>[string]string) 
-        + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
-
-    }
-    class Function << (S,Aquamarine) >> {
-        + Name string
-        + Parameters []*Field
-        + ReturnValues []string
-        + PackageName string
-        + FullNameReturnValues []string
-
-        + SignturesAreEqual(function *{packageName}Function) bool
 
     }
 }

@@ -10,10 +10,6 @@ import (
 	goplantuml "github.com/jfeliu007/goplantuml/parser"
 )
 
-type NewParser struct {
-	goplantuml.ClassParser
-}
-
 func main() {
 	recursive := flag.Bool("recursive", false, "walk all directories recursively")
 	flag.Parse()
