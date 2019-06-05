@@ -1,5 +1,30 @@
 @startuml
 namespace parser {
+    class Struct << (S,Aquamarine) >> {
+        + PackageName string
+        + Functions []*Function
+        + Fields []*Field
+        + Type string
+        + Composition <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+        + Extends <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+
+        + ImplementsInterface(inter *Struct) bool
+        + AddToComposition(fType string) 
+        + AddToExtends(fType string) 
+        + AddField(field *ast.Field, aliases <font color=blue>map</font>[string]string) 
+        + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
+
+    }
+    class Function << (S,Aquamarine) >> {
+        + Name string
+        + Parameters []*Field
+        + ReturnValues []string
+        + PackageName string
+        + FullNameReturnValues []string
+
+        + SignturesAreEqual(function *Function) bool
+
+    }
     class Field << (S,Aquamarine) >> {
         + Name string
         + Type string
@@ -31,31 +56,6 @@ namespace parser {
         - getStruct(structName string) *Struct
 
         + Render() string
-
-    }
-    class Struct << (S,Aquamarine) >> {
-        + PackageName string
-        + Functions []*Function
-        + Fields []*Field
-        + Type string
-        + Composition <font color=blue>map</font>[string]<font color=blue>struct</font>{}
-        + Extends <font color=blue>map</font>[string]<font color=blue>struct</font>{}
-
-        + ImplementsInterface(inter *Struct) bool
-        + AddToComposition(fType string) 
-        + AddToExtends(fType string) 
-        + AddField(field *ast.Field, aliases <font color=blue>map</font>[string]string) 
-        + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
-
-    }
-    class Function << (S,Aquamarine) >> {
-        + Name string
-        + Parameters []*Field
-        + ReturnValues []string
-        + PackageName string
-        + FullNameReturnValues []string
-
-        + SignturesAreEqual(function *Function) bool
 
     }
 }
