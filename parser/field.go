@@ -7,10 +7,13 @@ import (
 	"go/ast"
 )
 
+const packageConstant = "{packageName}"
+
 //Field can hold the name and type of any field
 type Field struct {
-	Name string
-	Type string
+	Name     string
+	Type     string
+	FullType string
 }
 
 //Returns a string representation of the given expression if it was recognized.
@@ -18,7 +21,10 @@ type Field struct {
 func getFieldType(exp ast.Expr, aliases map[string]string) string {
 	switch v := exp.(type) {
 	case *ast.Ident:
-		return fmt.Sprintf("%s", v.Name)
+		if isPrimitive(v) {
+			return v.Name
+		}
+		return fmt.Sprintf("%s%s", packageConstant, v.Name)
 	case *ast.ArrayType:
 		return fmt.Sprintf("[]%s", getFieldType(v.Elt, aliases))
 	case *ast.SelectorExpr:
@@ -26,7 +32,7 @@ func getFieldType(exp ast.Expr, aliases map[string]string) string {
 		if alias, ok := aliases[packageName]; ok {
 			packageName = alias
 		}
-		return fmt.Sprintf("%s.%s", packageName, getFieldType(v.Sel, aliases))
+		return fmt.Sprintf("%s.%s", packageName, v.Sel.Name)
 	case *ast.MapType:
 		return fmt.Sprintf("<font color=blue>map</font>[%s]%s", getFieldType(v.Key, aliases), getFieldType(v.Value, aliases))
 	case *ast.StarExpr:
@@ -50,7 +56,7 @@ func getFieldType(exp ast.Expr, aliases map[string]string) string {
 		}
 		return fmt.Sprintf("<font color=blue>interface</font>{%s}", strings.Join(methods, "; "))
 	case *ast.FuncType:
-		function := getFunction(v, "", aliases)
+		function := getFunction(v, "", aliases, "")
 		params := make([]string, 0)
 		for _, pa := range function.Parameters {
 			params = append(params, pa.Type)
@@ -70,4 +76,38 @@ func getFieldType(exp ast.Expr, aliases map[string]string) string {
 		return fmt.Sprintf("...%s", getFieldType(v.Elt, aliases))
 	}
 	return ""
+}
+
+var globalPrimitives = map[string]struct{}{
+	"bool":       {},
+	"string":     {},
+	"int":        {},
+	"int8":       {},
+	"int16":      {},
+	"int32":      {},
+	"int64":      {},
+	"uint":       {},
+	"uint8":      {},
+	"uint16":     {},
+	"uint32":     {},
+	"uint64":     {},
+	"uintptr":    {},
+	"byte":       {},
+	"rune":       {},
+	"float32":    {},
+	"float64":    {},
+	"complex64":  {},
+	"complex128": {},
+}
+
+func isPrimitive(ty *ast.Ident) bool {
+	_, ok := globalPrimitives[ty.Name]
+	return ok
+}
+
+func replacePackageConstant(field, packageName string) string {
+	if packageName != "" {
+		packageName = fmt.Sprintf("%s.", packageName)
+	}
+	return strings.Replace(field, packageConstant, packageName, 1)
 }

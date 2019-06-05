@@ -92,8 +92,8 @@ func TestGetOrCreateStruct(t *testing.T) {
 					Functions:   make([]*Function, 0),
 					Fields:      make([]*Field, 0),
 					Type:        "",
-					Composition: make([]string, 0),
-					Extends:     make([]string, 0),
+					Composition: make(map[string]struct{}, 0),
+					Extends:     make(map[string]struct{}, 0),
 				}) {
 					t.Errorf("Expected resulting structure to be equal to %v, got %v", tc.structure, st)
 				}

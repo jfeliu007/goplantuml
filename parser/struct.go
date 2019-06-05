@@ -64,17 +64,20 @@ func (st *Struct) AddToExtends(fType string) {
 //AddField adds a field into this structure. It parses the ast.Field and extract all
 //needed information
 func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
+	theType := getFieldType(field.Type, aliases)
+	theType = replacePackageConstant(theType, "")
 	if field.Names != nil {
+		theType := getFieldType(field.Type, aliases)
+		theType = replacePackageConstant(theType, "")
 		st.Fields = append(st.Fields, &Field{
 			Name: field.Names[0].Name,
-			Type: getFieldType(field.Type, aliases),
+			Type: theType,
 		})
 	} else if field.Type != nil {
-		fType := getFieldType(field.Type, aliases)
-		if fType[0] == "*"[0] {
-			fType = fType[1:]
+		if theType[0] == "*"[0] {
+			theType = theType[1:]
 		}
-		st.AddToComposition(fType)
+		st.AddToComposition(theType)
 	}
 }
 
@@ -84,6 +87,6 @@ func (st *Struct) AddMethod(method *ast.Field, aliases map[string]string) {
 	if !ok {
 		return
 	}
-	function := getFunction(f, method.Names[0].Name, aliases)
+	function := getFunction(f, method.Names[0].Name, aliases, st.PackageName)
 	st.Functions = append(st.Functions, function)
 }

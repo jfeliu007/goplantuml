@@ -7,16 +7,18 @@ import (
 
 //Function holds the signature of a function with name, Parameters and Return values
 type Function struct {
-	Name         string
-	Parameters   []*Field
-	ReturnValues []string
+	Name                 string
+	Parameters           []*Field
+	ReturnValues         []string
+	PackageName          string
+	FullNameReturnValues []string
 }
 
 //SignturesAreEqual Returns true if the two functions have the same signature (parameter names are not checked)
 func (f *Function) SignturesAreEqual(function *Function) bool {
 	result := true
 	result = result && (function.Name == f.Name)
-	result = result && reflect.DeepEqual(f.ReturnValues, function.ReturnValues)
+	result = result && reflect.DeepEqual(f.FullNameReturnValues, function.FullNameReturnValues)
 	result = result && (len(f.Parameters) == len(function.Parameters))
 	if result {
 		for i, p := range f.Parameters {
@@ -30,11 +32,13 @@ func (f *Function) SignturesAreEqual(function *Function) bool {
 
 // generate and return a function object from the given Functype. The names must be passed to this
 // function since the FuncType does not have this information
-func getFunction(f *ast.FuncType, name string, aliases map[string]string) *Function {
+func getFunction(f *ast.FuncType, name string, aliases map[string]string, packageName string) *Function {
 	function := &Function{
-		Name:         name,
-		Parameters:   make([]*Field, 0),
-		ReturnValues: make([]string, 0),
+		Name:                 name,
+		Parameters:           make([]*Field, 0),
+		ReturnValues:         make([]string, 0),
+		FullNameReturnValues: make([]string, 0),
+		PackageName:          packageName,
 	}
 	params := f.Params
 	if params != nil {
@@ -43,9 +47,11 @@ func getFunction(f *ast.FuncType, name string, aliases map[string]string) *Funct
 			if pa.Names != nil {
 				fieldName = pa.Names[0].Name
 			}
+			theType := getFieldType(pa.Type, aliases)
 			function.Parameters = append(function.Parameters, &Field{
-				Name: fieldName,
-				Type: getFieldType(pa.Type, aliases),
+				Name:     fieldName,
+				Type:     theType,
+				FullType: replacePackageConstant(theType, packageName),
 			})
 		}
 	}
@@ -53,7 +59,9 @@ func getFunction(f *ast.FuncType, name string, aliases map[string]string) *Funct
 	results := f.Results
 	if results != nil {
 		for _, pa := range results.List {
-			function.ReturnValues = append(function.ReturnValues, getFieldType(pa.Type, aliases))
+			theType := getFieldType(pa.Type, aliases)
+			function.ReturnValues = append(function.ReturnValues, theType)
+			function.FullNameReturnValues = append(function.FullNameReturnValues, replacePackageConstant(theType, packageName))
 		}
 	}
 	return function
