@@ -98,6 +98,7 @@ var globalPrimitives = map[string]struct{}{
 	"float64":    {},
 	"complex64":  {},
 	"complex128": {},
+	"error":      {},
 }
 
 func isPrimitive(ty *ast.Ident) bool {
