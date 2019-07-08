@@ -2,12 +2,9 @@ package parser
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"go/ast"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 const packageConstant = "{packageName}"
@@ -26,10 +23,6 @@ func getFieldType(exp ast.Expr, aliases map[string]string) string {
 	case *ast.Ident:
 		if isPrimitive(v) {
 			return v.Name
-		}
-		if v.Name == "error" {
-			spew.Dump(exp)
-			os.Exit(1)
 		}
 		return fmt.Sprintf("%s%s", packageConstant, v.Name)
 	case *ast.ArrayType:
