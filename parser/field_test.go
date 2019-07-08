@@ -88,12 +88,12 @@ func TestGetFieldType(t *testing.T) {
 			InputField: &ast.StructType{
 				Fields: &ast.FieldList{
 					List: []*ast.Field{
-						&ast.Field{
+						{
 							Type: &ast.Ident{
 								Name: "int",
 							},
 						},
-						&ast.Field{
+						{
 							Type: &ast.Ident{
 								Name: "string",
 							},
@@ -108,9 +108,9 @@ func TestGetFieldType(t *testing.T) {
 			InputField: &ast.InterfaceType{
 				Methods: &ast.FieldList{
 					List: []*ast.Field{
-						&ast.Field{
+						{
 							Names: []*ast.Ident{
-								&ast.Ident{
+								{
 									Name: "Foo",
 								},
 							},

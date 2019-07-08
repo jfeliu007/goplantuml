@@ -248,7 +248,7 @@ func TestAddToComposition(t *testing.T) {
 		t.Errorf(`TestAddToComposition: Expected CompositionArray to not have "", but it contains %v`, st.Composition)
 	}
 	testArray := map[string]struct{}{
-		"Foo": struct{}{},
+		"Foo": {},
 	}
 	if !reflect.DeepEqual(st.Composition, testArray) {
 
@@ -296,7 +296,7 @@ func TestAddToExtension(t *testing.T) {
 		t.Errorf(`TestAddToComposition: Expected Extends Array to not have "", but it contains %v`, st.Composition)
 	}
 	testArray := map[string]struct{}{
-		"Foo": struct{}{},
+		"Foo": {},
 	}
 	if !reflect.DeepEqual(st.Extends, testArray) {
 		t.Errorf("TestAddToComposition: Expected Extends Array to be %v, but it contains %v", testArray, st.Composition)
