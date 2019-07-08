@@ -29,7 +29,7 @@ func TestStructImplementsInterface(t *testing.T) {
 								Type: "string",
 							},
 						},
-						ReturnValues: []string{"int", "error"},
+						FullNameReturnValues: []string{"int", "error"},
 					},
 				},
 				Type: "class",
@@ -46,7 +46,7 @@ func TestStructImplementsInterface(t *testing.T) {
 								Type: "string",
 							},
 						},
-						ReturnValues: []string{"int", "error"},
+						FullNameReturnValues: []string{"int", "error"},
 					},
 				},
 				Type: "class",
@@ -68,7 +68,7 @@ func TestStructImplementsInterface(t *testing.T) {
 								Type: "string",
 							},
 						},
-						ReturnValues: []string{"int", "error"},
+						FullNameReturnValues: []string{"int", "error"},
 					},
 				},
 				Type: "interface",
@@ -87,7 +87,7 @@ func TestStructImplementsInterface(t *testing.T) {
 								Type: "int",
 							},
 						},
-						ReturnValues: []string{"int", "error"},
+						FullNameReturnValues: []string{"int", "error"},
 					},
 				},
 				Type: "interface",
@@ -109,7 +109,7 @@ func TestStructImplementsInterface(t *testing.T) {
 								Type: "string",
 							},
 						},
-						ReturnValues: []string{"int", "error"},
+						FullNameReturnValues: []string{"int", "error"},
 					},
 				},
 				Type: "class",
@@ -135,7 +135,7 @@ func TestStructImplementsInterface(t *testing.T) {
 								Type: "string",
 							},
 						},
-						ReturnValues: []string{"int", "error"},
+						FullNameReturnValues: []string{"int", "error"},
 					},
 				},
 				Type: "class",
@@ -154,7 +154,7 @@ func TestStructImplementsInterface(t *testing.T) {
 								Type: "string",
 							},
 						},
-						ReturnValues: []string{"int", "error"},
+						FullNameReturnValues: []string{"int", "error"},
 					},
 				},
 				Type: "class",
@@ -176,7 +176,7 @@ func TestStructImplementsInterface(t *testing.T) {
 								Type: "string",
 							},
 						},
-						ReturnValues: []string{"int", "error"},
+						FullNameReturnValues: []string{"int", "error"},
 					},
 				},
 				Type: "class",
@@ -193,7 +193,7 @@ func TestStructImplementsInterface(t *testing.T) {
 								Type: "string",
 							},
 						},
-						ReturnValues: []string{"error", "int"},
+						FullNameReturnValues: []string{"error", "int"},
 					},
 				},
 				Type: "class",
@@ -226,10 +226,15 @@ func TestAddToComposition(t *testing.T) {
 						Type: "string",
 					},
 				},
-				ReturnValues: []string{"error", "int"},
+				ReturnValues:         []string{"error", "int"},
+				FullNameReturnValues: []string{"error", "int"},
 			},
 		},
-		Type: "class",
+		Type:        "class",
+		PackageName: "test",
+		Fields:      make([]*Field, 0),
+		Composition: make(map[string]struct{}),
+		Extends:     make(map[string]struct{}),
 	}
 	st.AddToComposition("Foo")
 
@@ -242,7 +247,9 @@ func TestAddToComposition(t *testing.T) {
 	if arrayContains(st.Composition, "") {
 		t.Errorf(`TestAddToComposition: Expected CompositionArray to not have "", but it contains %v`, st.Composition)
 	}
-	testArray := []string{"Foo"}
+	testArray := map[string]struct{}{
+		"Foo": struct{}{},
+	}
 	if !reflect.DeepEqual(st.Composition, testArray) {
 
 		t.Errorf("TestAddToComposition: Expected CompositionArray to be %v, but it contains %v", testArray, st.Composition)
@@ -267,10 +274,15 @@ func TestAddToExtension(t *testing.T) {
 						Type: "string",
 					},
 				},
-				ReturnValues: []string{"error", "int"},
+				ReturnValues:         []string{"error", "int"},
+				FullNameReturnValues: []string{"error", "int"},
 			},
 		},
-		Type: "class",
+		Type:        "class",
+		PackageName: "test",
+		Fields:      make([]*Field, 0),
+		Composition: make(map[string]struct{}),
+		Extends:     make(map[string]struct{}),
 	}
 	st.AddToExtends("Foo")
 
@@ -283,9 +295,10 @@ func TestAddToExtension(t *testing.T) {
 	if arrayContains(st.Extends, "") {
 		t.Errorf(`TestAddToComposition: Expected Extends Array to not have "", but it contains %v`, st.Composition)
 	}
-	testArray := []string{"Foo"}
+	testArray := map[string]struct{}{
+		"Foo": struct{}{},
+	}
 	if !reflect.DeepEqual(st.Extends, testArray) {
-
 		t.Errorf("TestAddToComposition: Expected Extends Array to be %v, but it contains %v", testArray, st.Composition)
 	}
 
@@ -313,12 +326,16 @@ func TestAddField(t *testing.T) {
 		PackageName: "main",
 		Functions: []*Function{
 			{
-				Name:         "foo",
-				Parameters:   []*Field{},
-				ReturnValues: []string{"error", "int"},
+				Name:                 "foo",
+				Parameters:           []*Field{},
+				ReturnValues:         []string{"error", "int"},
+				FullNameReturnValues: []string{"error", "int"},
 			},
 		},
-		Type: "class",
+		Type:        "class",
+		Fields:      make([]*Field, 0),
+		Composition: make(map[string]struct{}),
+		Extends:     make(map[string]struct{}),
 	}
 	st.AddField(&ast.Field{
 		Names: []*ast.Ident{
@@ -411,16 +428,18 @@ func TestAddMethod(t *testing.T) {
 		t.Errorf("TestAddMethod: Expected st.Functions to have exactly one element but it has %d elements", len(st.Functions))
 	}
 	testFunction := &Function{
-		Name: "foo",
+		PackageName: "main",
+		Name:        "foo",
 		Parameters: []*Field{
 			{
 				Name: "var1",
 				Type: "*FooComposed",
 			},
 		},
-		ReturnValues: []string{"*FooComposed"},
+		ReturnValues:         []string{"*FooComposed"},
+		FullNameReturnValues: []string{"*main.FooComposed"},
 	}
-	if !reflect.DeepEqual(st.Functions[0], testFunction) {
+	if !st.Functions[0].SignturesAreEqual(testFunction) {
 		t.Errorf("TestAddMethod: Expected st.Function[0] to have %v, got %v", testFunction, st.Functions[0])
 	}
 }

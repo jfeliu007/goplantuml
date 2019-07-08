@@ -29,8 +29,8 @@ func getFieldType(exp ast.Expr, aliases map[string]string) string {
 		return fmt.Sprintf("[]%s", getFieldType(v.Elt, aliases))
 	case *ast.SelectorExpr:
 		packageName := v.X.(*ast.Ident).Name
-		if alias, ok := aliases[packageName]; ok {
-			packageName = alias
+		if realPackageName, ok := aliases[packageName]; ok {
+			packageName = realPackageName
 		}
 		return fmt.Sprintf("%s.%s", packageName, v.Sel.Name)
 	case *ast.MapType:
