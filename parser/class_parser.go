@@ -65,7 +65,7 @@ func NewClassDiagram(directoryPath string, recursive bool) (*ClassParser, error)
 				return err
 			}
 			if info.IsDir() {
-				if strings.HasPrefix(info.Name(), ".") {
+				if strings.HasPrefix(info.Name(), ".") || info.Name() == "vendor" {
 					return filepath.SkipDir
 				}
 				classParser.parseDirectory(path)
