@@ -21,12 +21,14 @@ func TestStructImplementsInterface(t *testing.T) {
 						Name: "foo",
 						Parameters: []*Field{
 							{
-								Name: "a",
-								Type: "int",
+								Name:     "a",
+								Type:     "int",
+								FullType: "int",
 							},
 							{
-								Name: "b",
-								Type: "string",
+								Name:     "b",
+								Type:     "string",
+								FullType: "string",
 							},
 						},
 						FullNameReturnValues: []string{"int", "error"},
@@ -40,10 +42,12 @@ func TestStructImplementsInterface(t *testing.T) {
 						Name: "foo",
 						Parameters: []*Field{
 							{
-								Type: "int",
+								Type:     "int",
+								FullType: "int",
 							},
 							{
-								Type: "string",
+								Type:     "string",
+								FullType: "string",
 							},
 						},
 						FullNameReturnValues: []string{"int", "error"},
@@ -60,12 +64,14 @@ func TestStructImplementsInterface(t *testing.T) {
 						Name: "foo",
 						Parameters: []*Field{
 							{
-								Name: "a",
-								Type: "int",
+								Name:     "a",
+								Type:     "int",
+								FullType: "int",
 							},
 							{
-								Name: "b",
-								Type: "string",
+								Name:     "b",
+								Type:     "string",
+								FullType: "string",
 							},
 						},
 						FullNameReturnValues: []string{"int", "error"},
@@ -79,12 +85,14 @@ func TestStructImplementsInterface(t *testing.T) {
 						Name: "foo",
 						Parameters: []*Field{
 							{
-								Name: "b",
-								Type: "string",
+								Name:     "b",
+								Type:     "string",
+								FullType: "string",
 							},
 							{
-								Name: "a",
-								Type: "int",
+								Name:     "a",
+								Type:     "int",
+								FullType: "int",
 							},
 						},
 						FullNameReturnValues: []string{"int", "error"},
@@ -101,12 +109,14 @@ func TestStructImplementsInterface(t *testing.T) {
 						Name: "foo",
 						Parameters: []*Field{
 							{
-								Name: "a",
-								Type: "int",
+								Name:     "a",
+								Type:     "int",
+								FullType: "int",
 							},
 							{
-								Name: "b",
-								Type: "string",
+								Name:     "b",
+								Type:     "string",
+								FullType: "string",
 							},
 						},
 						FullNameReturnValues: []string{"int", "error"},
@@ -127,12 +137,14 @@ func TestStructImplementsInterface(t *testing.T) {
 						Name: "foo",
 						Parameters: []*Field{
 							{
-								Name: "a",
-								Type: "int",
+								Name:     "a",
+								Type:     "int",
+								FullType: "int",
 							},
 							{
-								Name: "b",
-								Type: "string",
+								Name:     "b",
+								Type:     "string",
+								FullType: "String",
 							},
 						},
 						FullNameReturnValues: []string{"int", "error"},
@@ -146,12 +158,14 @@ func TestStructImplementsInterface(t *testing.T) {
 						Name: "bar",
 						Parameters: []*Field{
 							{
-								Name: "a",
-								Type: "int",
+								Name:     "a",
+								Type:     "int",
+								FullType: "int",
 							},
 							{
-								Name: "b",
-								Type: "string",
+								Name:     "b",
+								Type:     "string",
+								FullType: "string",
 							},
 						},
 						FullNameReturnValues: []string{"int", "error"},
@@ -168,12 +182,14 @@ func TestStructImplementsInterface(t *testing.T) {
 						Name: "foo",
 						Parameters: []*Field{
 							{
-								Name: "a",
-								Type: "int",
+								Name:     "a",
+								Type:     "int",
+								FullType: "int",
 							},
 							{
-								Name: "b",
-								Type: "string",
+								Name:     "b",
+								Type:     "string",
+								FullType: "string",
 							},
 						},
 						FullNameReturnValues: []string{"int", "error"},
@@ -432,8 +448,9 @@ func TestAddMethod(t *testing.T) {
 		Name:        "foo",
 		Parameters: []*Field{
 			{
-				Name: "var1",
-				Type: "*FooComposed",
+				Name:     "var1",
+				Type:     "*FooComposed",
+				FullType: "*main.FooComposed",
 			},
 		},
 		ReturnValues:         []string{"*FooComposed"},
