@@ -1,0 +1,12 @@
+@startuml
+namespace testingsupport {
+    class test << (S,Aquamarine) >> {
+        - field int
+
+        - test() 
+
+    }
+}
+
+
+@enduml
