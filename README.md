@@ -4,7 +4,7 @@
 PlantUML Class Diagram Generator for golang projects. Generates class diagram text compatible with plantuml with the information of all structures and interfaces as well as the relationship among them.
 
 ### Prerequisites
-golang
+golang 1.10 or above
 
 ### Installing
 
