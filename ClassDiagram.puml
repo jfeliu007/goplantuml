@@ -1,5 +1,21 @@
 @startuml
 namespace parser {
+    class Function << (S,Aquamarine) >> {
+        + Name string
+        + Parameters []*Field
+        + ReturnValues []string
+        + PackageName string
+        + FullNameReturnValues []string
+
+        + SignturesAreEqual(function *Function) bool
+
+    }
+    class Field << (S,Aquamarine) >> {
+        + Name string
+        + Type string
+        + FullType string
+
+    }
     class LineStringBuilder << (S,Aquamarine) >> {
         + WriteLineWithDepth(depth int, str string) 
 
@@ -42,64 +58,8 @@ namespace parser {
         + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
 
     }
-    class Function << (S,Aquamarine) >> {
-        + Name string
-        + Parameters []*Field
-        + ReturnValues []string
-        + PackageName string
-        + FullNameReturnValues []string
-
-        + SignturesAreEqual(function *Function) bool
-
-    }
-    class Field << (S,Aquamarine) >> {
-        + Name string
-        + Type string
-        + FullType string
-
-    }
 }
 strings.Builder *-- parser.LineStringBuilder
 
-
-namespace testingsupport {
-    interface TestInterface  {
-        + FunctionTest( bool) *TestStruct
-
-    }
-    class TestStruct << (S,Aquamarine) >> {
-        - s string
-        - i int
-        - b bool
-        - f float32
-        - f64 float64
-        - ast *ast.Ident
-
-        + PublicS string
-
-        - functionWithParams(i int, b bool) 
-        - functionWithReturnValue() bool
-        - functionWithReturnValues() (bool, *int)
-
-        + PublicFunctionWithParams(i int, b bool) 
-        + FunctionTest( bool) *TestStruct
-
-    }
-    class TestComposite << (S,Aquamarine) >> {
-    }
-}
-testingsupport.TestComposite *-- testingsupport.TestStruct
-strings.Builder *-- testingsupport.TestStruct
-
-testingsupport.TestInterface <|-- testingsupport.TestStruct
-
-namespace subfolder {
-    class Test << (S,Aquamarine) >> {
-        + FunctionTest( bool) *testingsupport.TestStruct
-
-    }
-}
-
-testingsupport.TestInterface <|-- subfolder.Test
 
 @enduml
