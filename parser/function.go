@@ -22,7 +22,7 @@ func (f *Function) SignturesAreEqual(function *Function) bool {
 	result = result && (len(f.Parameters) == len(function.Parameters))
 	if result {
 		for i, p := range f.Parameters {
-			if p.Type != function.Parameters[i].Type {
+			if p.FullType != function.Parameters[i].FullType {
 				return false
 			}
 		}
