@@ -43,16 +43,16 @@ func getFunction(f *ast.FuncType, name string, aliases map[string]string, packag
 	params := f.Params
 	if params != nil {
 		for _, pa := range params.List {
-			fieldName := ""
-			if pa.Names != nil {
-				fieldName = pa.Names[0].Name
-			}
 			theType := getFieldType(pa.Type, aliases)
-			function.Parameters = append(function.Parameters, &Field{
-				Name:     fieldName,
-				Type:     replacePackageConstant(theType, ""),
-				FullType: replacePackageConstant(theType, packageName),
-			})
+			if pa.Names != nil {
+				for _, fieldName := range pa.Names {
+					function.Parameters = append(function.Parameters, &Field{
+						Name:     fieldName.Name,
+						Type:     replacePackageConstant(theType, ""),
+						FullType: replacePackageConstant(theType, packageName),
+					})
+				}
+			}
 		}
 	}
 
