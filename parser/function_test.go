@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestgetFunction(t *testing.T) {
+func TestGetFunction(t *testing.T) {
 
 	tt := []struct {
 		Name           string
