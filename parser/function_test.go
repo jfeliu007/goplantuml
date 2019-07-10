@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestgetFunction(t *testing.T) {
+func TestGetFunction(t *testing.T) {
 
 	tt := []struct {
 		Name           string
@@ -15,7 +15,7 @@ func TestgetFunction(t *testing.T) {
 		FunctionName   string
 	}{
 		{
-			Name: "Function with to typed parameters",
+			Name: "Function with two typed parameters",
 			Func: &ast.FuncType{
 				Params: &ast.FieldList{
 					List: []*ast.Field{
@@ -29,39 +29,10 @@ func TestgetFunction(t *testing.T) {
 								Name: "int",
 							},
 						},
-					},
-				},
-			},
-			ExpectedResult: &Function{
-				Name: "TestFunction",
-				Parameters: []*Field{
-					{
-						Name:     "param1",
-						Type:     "int",
-						FullType: "int",
-					},
-				},
-			},
-			FunctionName: "TestFunction",
-		},
-		{
-			Name:           "Function with to parameters only one typed",
-			Func:           &ast.FuncType{},
-			ExpectedResult: &Function{},
-			FunctionName:   "TestFunction",
-		},
-		{
-			Name: "Function with to typed parameters",
-			Func: &ast.FuncType{
-				Params: &ast.FieldList{
-					List: []*ast.Field{
 						{
 							Names: []*ast.Ident{
 								{
-									Name: "param1",
-								},
-								{
-									Name: "param2i",
+									Name: "param2",
 								},
 							},
 							Type: &ast.Ident{
@@ -72,7 +43,8 @@ func TestgetFunction(t *testing.T) {
 				},
 			},
 			ExpectedResult: &Function{
-				Name: "TestFunction",
+				Name:        "TestFunction",
+				PackageName: "main",
 				Parameters: []*Field{
 					{
 						Name:     "param1",
@@ -85,24 +57,64 @@ func TestgetFunction(t *testing.T) {
 						FullType: "int",
 					},
 				},
+				ReturnValues:         []string{},
+				FullNameReturnValues: []string{},
 			},
 			FunctionName: "TestFunction",
 		},
 		{
-			Name:           "Function with to parameters only one typed",
-			Func:           &ast.FuncType{},
-			ExpectedResult: &Function{},
-			FunctionName:   "TestFunction",
+			Name: "Function with two parameters only one typed",
+			Func: &ast.FuncType{
+				Params: &ast.FieldList{
+					List: []*ast.Field{
+						{
+							Names: []*ast.Ident{
+								{
+									Name: "param1",
+								},
+								{
+									Name: "param2",
+								},
+							},
+							Type: &ast.Ident{
+								Name: "int",
+							},
+						},
+					},
+				},
+			},
+			ExpectedResult: &Function{
+				Name:        "TestFunction",
+				PackageName: "main",
+				Parameters: []*Field{
+					{
+						Name:     "param1",
+						Type:     "int",
+						FullType: "int",
+					},
+					{
+						Name:     "param2",
+						Type:     "int",
+						FullType: "int",
+					},
+				},
+				ReturnValues:         []string{},
+				FullNameReturnValues: []string{},
+			},
+			FunctionName: "TestFunction",
 		},
 	}
 
 	for _, tc := range tt {
-		function := getFunction(tc.Func, tc.FunctionName, map[string]string{
-			"main": "main",
-		}, "main")
+		t.Run(tc.Name, func(t *testing.T) {
 
-		if !reflect.DeepEqual(function, tc.ExpectedResult) {
-			t.Errorf("Expected function to be %v, got %v", tc.ExpectedResult, function)
-		}
+			function := getFunction(tc.Func, tc.FunctionName, map[string]string{
+				"main": "main",
+			}, "main")
+
+			if !reflect.DeepEqual(function, tc.ExpectedResult) {
+				t.Errorf("Expected function to be %+v, got %+v", tc.ExpectedResult, function)
+			}
+		})
 	}
 }
