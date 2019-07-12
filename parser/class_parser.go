@@ -207,7 +207,7 @@ func (p *ClassParser) Render() string {
 		p.renderStructures(pack, structures, str)
 
 	}
-	str.WriteString("@enduml")
+	str.WriteLineWithDepth(0, "@enduml")
 	return str.String()
 }
 
