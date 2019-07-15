@@ -152,5 +152,7 @@ testingsupport.MyInterface <|-- testingsupport.MyStruct1
 @enduml
 ```
 
+![alt text](https://raw.githubusercontent.com/jfeliu007/goplantuml/master/example/example.png)
+
 ### The following diagram is generated based on the file in https://raw.githubusercontent.com/jfeliu007/goplantuml/master/ClassDiagram.puml
 ![Alt text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jfeliu007/goplantuml/master/ClassDiagram.puml?raw=true "Title")
