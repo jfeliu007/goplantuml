@@ -92,5 +92,65 @@ goplantuml $GOPATH/src/github.com/jfeliu007/goplantuml/parser > ClassDiagram.pum
 // Generates a file ClassDiagram.plum with the previous specifications
 ```
 
+There are two different relationships considered in goplantuml:
+- Interface implementation
+- Type Composition
+
+The following example contains interface implementations and composition. Notice how the signature of the functions
+```golang
+package testingsupport
+
+//MyInterface only has one method, notice the signature return value
+type MyInterface interface {
+	foo() bool
+}
+
+//MyStruct1 will implement the foo() bool function so it will have an "extends" association with MyInterface
+type MyStruct1 struct {
+}
+
+func (s1 *MyStruct1) foo() bool {
+	return true
+}
+
+//MyStruct2 will be direclty composed of MyStruct1 so it will have a composition relationship with it
+type MyStruct2 struct {
+	MyStruct1
+}
+
+//MyStruct3 will have a foo() function but the return value is not a bool, so it will not have any relationship with MyInterface
+type MyStruct3 struct {
+}
+
+func (s3 *MyStruct3) foo() {
+
+}
+```
+This will be generated from the previous code
+```
+@startuml
+namespace testingsupport {
+    interface MyInterface  {
+        - foo() bool
+
+    }
+    class MyStruct1 << (S,Aquamarine) >> {
+        - foo() bool
+
+    }
+    class MyStruct2 << (S,Aquamarine) >> {
+    }
+    class MyStruct3 << (S,Aquamarine) >> {
+        - foo() 
+
+    }
+}
+testingsupport.MyStruct1 *-- testingsupport.MyStruct2
+
+testingsupport.MyInterface <|-- testingsupport.MyStruct1
+
+@enduml
+```
+
 ### The following diagram is generated based on the file in https://raw.githubusercontent.com/jfeliu007/goplantuml/master/ClassDiagram.puml
 ![Alt text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jfeliu007/goplantuml/master/ClassDiagram.puml?raw=true "Title")
