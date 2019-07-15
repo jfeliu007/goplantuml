@@ -32,6 +32,7 @@ type LineStringBuilder struct {
 }
 
 const tab = "    "
+const builtinPackageName = "__builtin__"
 
 //WriteLineWithDepth will write the given text with added tabs at the beginning into the string builder.
 func (lsb *LineStringBuilder) WriteLineWithDepth(depth int, str string) {
@@ -259,10 +260,19 @@ func (p *ClassParser) renderCompositions(structure *Struct, name string, composi
 
 	for c := range structure.Composition {
 		if !strings.Contains(c, ".") {
-			c = fmt.Sprintf("%s.%s", structure.PackageName, c)
+			c = fmt.Sprintf("%s.%s", p.getPackageName(c, structure), c)
 		}
 		composition.WriteLineWithDepth(0, fmt.Sprintf(`%s *-- %s.%s`, c, structure.PackageName, name))
 	}
+}
+
+func (p *ClassParser) getPackageName(t string, st *Struct) string {
+
+	packageName := st.PackageName
+	if isPrimitiveString(t) {
+		packageName = builtinPackageName
+	}
+	return packageName
 }
 func (p *ClassParser) renderExtends(structure *Struct, name string, extends *LineStringBuilder) {
 

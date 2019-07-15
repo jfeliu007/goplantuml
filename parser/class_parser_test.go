@@ -291,6 +291,19 @@ func TestRenderCompositions(t *testing.T) {
 	if extendsBuilder.String() != expectedResult {
 		t.Errorf("TestRenderCompositions: Expected %s got %s", expectedResult, extendsBuilder.String())
 	}
+
+	st = &Struct{
+		PackageName: "main",
+		Composition: map[string]struct{}{
+			"int": {},
+		},
+	}
+	extendsBuilder = &LineStringBuilder{}
+	parser.renderCompositions(st, "TestClass", extendsBuilder)
+	expectedResult = builtinPackageName + ".int *-- main.TestClass\n"
+	if extendsBuilder.String() != expectedResult {
+		t.Errorf("TestRenderCompositions: Expected %s got %s", expectedResult, extendsBuilder.String())
+	}
 }
 func TestRenderExtends(t *testing.T) {
 	parser := getEmptyParser("main")
@@ -502,5 +515,16 @@ func TestRender(t *testing.T) {
 	}
 	if string(result) != resultRender {
 		t.Errorf("TestRender: Expected renders to be the same as %s, but got %s", result, resultRender)
+	}
+}
+
+func TestGetPackageName(t *testing.T) {
+	p := getEmptyParser("main")
+	s := &Struct{
+		PackageName: "main",
+	}
+	ty := p.getPackageName("int", s)
+	if ty != builtinPackageName {
+		t.Errorf("TestGetPackageName: expecting [%s], got [%s]", builtinPackageName, ty)
 	}
 }
