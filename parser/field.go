@@ -102,7 +102,11 @@ var globalPrimitives = map[string]struct{}{
 }
 
 func isPrimitive(ty *ast.Ident) bool {
-	_, ok := globalPrimitives[ty.Name]
+	return isPrimitiveString(ty.Name)
+}
+
+func isPrimitiveString(t string) bool {
+	_, ok := globalPrimitives[t]
 	return ok
 }
 
