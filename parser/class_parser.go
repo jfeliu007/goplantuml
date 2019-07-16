@@ -49,6 +49,7 @@ type ClassParser struct {
 	allInterfaces      map[string]struct{}
 	allStructs         map[string]struct{}
 	allImports         map[string]string
+	allAliases         map[string]*Alias
 }
 
 //NewClassDiagram returns a new classParser with which can Render the class diagram of
@@ -59,6 +60,7 @@ func NewClassDiagram(directoryPath string, recursive bool) (*ClassParser, error)
 		allInterfaces: make(map[string]struct{}),
 		allStructs:    make(map[string]struct{}),
 		allImports:    make(map[string]string),
+		allAliases:    make(map[string]*Alias),
 	}
 	if recursive {
 		err := filepath.Walk(directoryPath, func(path string, info os.FileInfo, err error) error {
@@ -144,6 +146,7 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 		spec := decl.Specs[0]
 		var declarationType string
 		var typeName string
+		var alias *Alias
 		switch v := spec.(type) {
 		case *ast.TypeSpec:
 			typeName = v.Name.Name
@@ -159,8 +162,14 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 					p.getOrCreateStruct(typeName).AddMethod(f, p.allImports)
 				}
 			default:
-				// Not needed for class diagrams (Imports, global variables, regular functions, etc)
-				return
+				declarationType = "alias"
+				aliasType := getFieldType(c, p.allImports)
+				if !isPrimitiveString(typeName) {
+					typeName = fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
+				}
+
+				fmt.Println(aliasType + " - " + typeName)
+				alias = getNewAlias(aliasType, p.currentPackageName, typeName)
 			}
 		default:
 			// Not needed for class diagrams (Imports, global variables, regular functions, etc)
@@ -173,6 +182,8 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 			p.allInterfaces[fullName] = struct{}{}
 		case "class":
 			p.allStructs[fullName] = struct{}{}
+		case "alias":
+			p.allAliases[typeName] = alias
 		}
 	case *ast.FuncDecl:
 		if decl.Recv != nil {
@@ -208,6 +219,9 @@ func (p *ClassParser) Render() string {
 		p.renderStructures(pack, structures, str)
 
 	}
+	for name, alias := range p.allAliases {
+		renderAlias(name, alias, str)
+	}
 	str.WriteLineWithDepth(0, "@enduml")
 	return str.String()
 }
@@ -226,6 +240,10 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 	}
 }
 
+func renderAlias(name string, alias *Alias, str *LineStringBuilder) {
+	str.WriteLineWithDepth(0, fmt.Sprintf("%s #.. %s", alias.Name, alias.AliasOf))
+}
+
 func (p *ClassParser) renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder) {
 
 	privateFields := &LineStringBuilder{}
@@ -233,10 +251,16 @@ func (p *ClassParser) renderStructure(structure *Struct, pack string, name strin
 	privateMethods := &LineStringBuilder{}
 	publicMethods := &LineStringBuilder{}
 	sType := ""
-	if structure.Type == "class" {
+	renderStructureType := structure.Type
+	switch structure.Type {
+	case "class":
 		sType = "<< (S,Aquamarine) >>"
+	case "alias":
+		sType = "<< (T, #FF7700) >> "
+		renderStructureType = "class"
+
 	}
-	str.WriteLineWithDepth(1, fmt.Sprintf(`%s %s %s {`, structure.Type, name, sType))
+	str.WriteLineWithDepth(1, fmt.Sprintf(`%s %s %s {`, renderStructureType, name, sType))
 	p.renderStructFields(structure, privateFields, publicFields)
 	p.renderStructMethods(structure, privateMethods, publicMethods)
 	p.renderCompositions(structure, name, composition)

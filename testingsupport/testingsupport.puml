@@ -6,7 +6,10 @@ namespace testingsupport {
         - test() 
 
     }
+    class testingsupport.myInt << (T, #FF7700) >>  {
+    }
 }
 
 
+__builtin__.int #.. testingsupport.myInt
 @enduml
