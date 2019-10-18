@@ -1,21 +1,15 @@
+int - testingsupport.myInt
 @startuml
+namespace subfolder2 {
+    class Subfolder2 << (S,Aquamarine) >> {
+        + SubfolderFunction() bool
+
+    }
+}
+
+subfolder.SubfolderInterface <|-- subfolder2.Subfolder2
+
 namespace parser {
-    class Function << (S,Aquamarine) >> {
-        + Name string
-        + Parameters []*Field
-        + ReturnValues []string
-        + PackageName string
-        + FullNameReturnValues []string
-
-        + SignturesAreEqual(function *Function) bool
-
-    }
-    class Field << (S,Aquamarine) >> {
-        + Name string
-        + Type string
-        + FullType string
-
-    }
     class LineStringBuilder << (S,Aquamarine) >> {
         + WriteLineWithDepth(depth int, str string) 
 
@@ -26,6 +20,7 @@ namespace parser {
         - allInterfaces <font color=blue>map</font>[string]<font color=blue>struct</font>{}
         - allStructs <font color=blue>map</font>[string]<font color=blue>struct</font>{}
         - allImports <font color=blue>map</font>[string]string
+        - allAliases <font color=blue>map</font>[string]*Alias
 
         - parsePackage(node ast.Node) 
         - parseImports(impt *ast.ImportSpec) 
@@ -34,6 +29,7 @@ namespace parser {
         - renderStructures(pack string, structures <font color=blue>map</font>[string]*Struct, str *LineStringBuilder) 
         - renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder) 
         - renderCompositions(structure *Struct, name string, composition *LineStringBuilder) 
+        - getPackageName(t string, st *Struct) string
         - renderExtends(structure *Struct, name string, extends *LineStringBuilder) 
         - renderStructMethods(structure *Struct, privateMethods *LineStringBuilder, publicMethods *LineStringBuilder) 
         - renderStructFields(structure *Struct, privateFields *LineStringBuilder, publicFields *LineStringBuilder) 
@@ -41,6 +37,18 @@ namespace parser {
         - getStruct(structName string) *Struct
 
         + Render() string
+
+    }
+    class Field << (S,Aquamarine) >> {
+        + Name string
+        + Type string
+        + FullType string
+
+    }
+    class Alias << (S,Aquamarine) >> {
+        + Name string
+        + PackageName string
+        + AliasOf string
 
     }
     class Struct << (S,Aquamarine) >> {
@@ -58,8 +66,44 @@ namespace parser {
         + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
 
     }
+    class Function << (S,Aquamarine) >> {
+        + Name string
+        + Parameters []*Field
+        + ReturnValues []string
+        + PackageName string
+        + FullNameReturnValues []string
+
+        + SignturesAreEqual(function *Function) bool
+
+    }
 }
 strings.Builder *-- parser.LineStringBuilder
 
 
+namespace testingsupport {
+    class test << (S,Aquamarine) >> {
+        - field int
+
+        - test() 
+
+    }
+    class testingsupport.myInt << (T, #FF7700) >>  {
+    }
+}
+
+subfolder.test2 <|-- testingsupport.test
+
+namespace subfolder {
+    interface test2  {
+        - test() 
+
+    }
+    interface SubfolderInterface  {
+        + SubfolderFunction() bool
+
+    }
+}
+
+
+__builtin__.int #.. testingsupport.myInt
 @enduml

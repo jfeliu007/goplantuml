@@ -13,20 +13,14 @@ import (
 func main() {
 	recursive := flag.Bool("recursive", false, "walk all directories recursively")
 	flag.Parse()
-	dir, err := getDirectory()
+	dirs, err := getDirectories()
 
 	if err != nil {
 		fmt.Println("usage:\ngoplantum <DIR>\nDIR Must be a valid directory")
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	absPath, err := filepath.Abs(dir)
-	if err != nil {
-		fmt.Println("usage:\ngoplantum <DIR>\nDIR Must be a valid directory")
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-	result, err := goplantuml.NewClassDiagram(absPath, *recursive)
+	result, err := goplantuml.NewClassDiagram(dirs, *recursive)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -34,19 +28,26 @@ func main() {
 	fmt.Print(result.Render())
 }
 
-func getDirectory() (string, error) {
+func getDirectories() ([]string, error) {
 
 	args := flag.Args()
 	if len(args) < 1 {
-		return "", errors.New("DIR missing")
+		return nil, errors.New("DIR missing")
 	}
-	dir := args[0]
-	fi, err := os.Stat(dir)
-	if os.IsNotExist(err) {
-		return "", fmt.Errorf("could not find directory %s", dir)
+	dirs := []string{}
+	for _, dir := range args {
+		fi, err := os.Stat(dir)
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("could not find directory %s", dir)
+		}
+		if !fi.Mode().IsDir() {
+			return nil, fmt.Errorf("%s is not a directory", dir)
+		}
+		dir, err := filepath.Abs(dir)
+		if err != nil {
+			return nil, fmt.Errorf("could not find directory %s", dir)
+		}
+		dirs = append(dirs, dir)
 	}
-	if !fi.Mode().IsDir() {
-		return "", fmt.Errorf("%s is not a directory", dir)
-	}
-	return dir, nil
+	return dirs, nil
 }

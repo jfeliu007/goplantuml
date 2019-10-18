@@ -25,10 +25,10 @@ This will install the command goplantuml in your GOPATH bin folder.
 ### Usage
 
 ```
-goplantuml [-recursive] path/to/gofiles
+goplantuml [-recursive] path/to/gofiles path/to/gofiles2
 ```
 ```
-goplantuml [-recursive] path/to/gofiles > diagram_file_name.puml
+goplantuml [-recursive] path/to/gofiles path/to/gofiles2 > diagram_file_name.puml
 ```
 
 #### Example
