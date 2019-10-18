@@ -531,7 +531,7 @@ func TestGetPackageName(t *testing.T) {
 }
 
 func TestMultipleFolders(t *testing.T) {
-	parser, err := NewClassDiagram([]string{"../testingsupport/subfolder", "../testingsupport/subfolder2"}, false)
+	parser, err := NewClassDiagram([]string{"../testingsupport/subfolder3", "../testingsupport/subfolder2"}, false)
 
 	if err != nil {
 		t.Errorf("TestMultipleFolders: expected no errors, got %s", err.Error())

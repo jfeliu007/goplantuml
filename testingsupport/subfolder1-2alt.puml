@@ -6,13 +6,9 @@ namespace subfolder2 {
     }
 }
 
-subfolder.SubfolderInterface <|-- subfolder2.Subfolder2
+subfolder3.SubfolderInterface <|-- subfolder2.Subfolder2
 
-namespace subfolder {
-    interface test2  {
-        - test() 
-
-    }
+namespace subfolder3 {
     interface SubfolderInterface  {
         + SubfolderFunction() bool
 
