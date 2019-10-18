@@ -467,7 +467,7 @@ func TestNewClassDiagram(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
-			parser, err := NewClassDiagram([]string{tc.Path}, tc.Recursive)
+			parser, err := NewClassDiagram([]string{tc.Path}, nil, tc.Recursive)
 
 			if tc.ExpectedError != "" {
 				if err == nil {
@@ -502,7 +502,7 @@ func TestNewClassDiagram(t *testing.T) {
 
 func TestRender(t *testing.T) {
 
-	parser, err := NewClassDiagram([]string{"../testingsupport"}, false)
+	parser, err := NewClassDiagram([]string{"../testingsupport"}, []string{}, false)
 	if err != nil {
 		t.Errorf("TestRender: expected no errors, got %s", err.Error())
 		return
@@ -531,7 +531,7 @@ func TestGetPackageName(t *testing.T) {
 }
 
 func TestMultipleFolders(t *testing.T) {
-	parser, err := NewClassDiagram([]string{"../testingsupport/subfolder3", "../testingsupport/subfolder2"}, false)
+	parser, err := NewClassDiagram([]string{"../testingsupport/subfolder3", "../testingsupport/subfolder2"}, []string{}, false)
 
 	if err != nil {
 		t.Errorf("TestMultipleFolders: expected no errors, got %s", err.Error())
@@ -546,5 +546,27 @@ func TestMultipleFolders(t *testing.T) {
 	resultAlt, err := ioutil.ReadFile("../testingsupport/subfolder1-2alt.puml")
 	if string(result) != resultRender && string(resultAlt) != resultRender {
 		t.Errorf("TestMultipleFolders: Expected renders to be the same as %s or %s, but got %s", result, resultAlt, resultRender)
+	}
+}
+
+func TestIgnoreDirectories(t *testing.T) {
+
+	parser, err := NewClassDiagram([]string{"../testingsupport"}, []string{}, true)
+	if err != nil {
+		t.Errorf("TestIgnoreDirectories: expected no errors, got %s", err.Error())
+		return
+	}
+	st := parser.getStruct("subfolder2.Subfolder2")
+	if st == nil {
+		t.Errorf("TestIgnoreDirectories: expected st to not be nil, got %v", st)
+		return
+	}
+
+	parser, err = NewClassDiagram([]string{"../testingsupport"}, []string{"../testingsupport/subfolder2"}, true)
+
+	st = parser.getStruct("subfolder2.Subfolder2")
+	if st != nil {
+		t.Errorf("TestIgnoreDirectories: expected st to be nil, got %v", st)
+		return
 	}
 }

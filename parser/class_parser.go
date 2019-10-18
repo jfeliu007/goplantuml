@@ -54,13 +54,17 @@ type ClassParser struct {
 
 //NewClassDiagram returns a new classParser with which can Render the class diagram of
 // files int eh given directory
-func NewClassDiagram(directoryPaths []string, recursive bool) (*ClassParser, error) {
+func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recursive bool) (*ClassParser, error) {
 	classParser := &ClassParser{
 		structure:     make(map[string]map[string]*Struct),
 		allInterfaces: make(map[string]struct{}),
 		allStructs:    make(map[string]struct{}),
 		allImports:    make(map[string]string),
 		allAliases:    make(map[string]*Alias),
+	}
+	ignoreDirectoryMap := map[string]struct{}{}
+	for _, dir := range ignoreDirectories {
+		ignoreDirectoryMap[dir] = struct{}{}
 	}
 	for _, directoryPath := range directoryPaths {
 		if recursive {
@@ -70,6 +74,9 @@ func NewClassDiagram(directoryPaths []string, recursive bool) (*ClassParser, err
 				}
 				if info.IsDir() {
 					if strings.HasPrefix(info.Name(), ".") || info.Name() == "vendor" {
+						return filepath.SkipDir
+					}
+					if _, ok := ignoreDirectoryMap[path]; ok {
 						return filepath.SkipDir
 					}
 					classParser.parseDirectory(path)
@@ -169,8 +176,6 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 				if !isPrimitiveString(typeName) {
 					typeName = fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
 				}
-
-				fmt.Println(aliasType + " - " + typeName)
 				alias = getNewAlias(aliasType, p.currentPackageName, typeName)
 			}
 		default:

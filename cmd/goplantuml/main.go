@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	goplantuml "github.com/jfeliu007/goplantuml/parser"
 )
 
 func main() {
 	recursive := flag.Bool("recursive", false, "walk all directories recursively")
+	ignore := flag.String("ignore", "", "comma separated list of folders to ignore")
 	flag.Parse()
 	dirs, err := getDirectories()
 
@@ -20,7 +22,15 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	result, err := goplantuml.NewClassDiagram(dirs, *recursive)
+	ignoredDirectories, err := getIgnoredDirectories(*ignore)
+	if err != nil {
+
+		fmt.Println("usage:\ngoplantum [-ignore=<DIRLIST>]\nDIRLIST Must be a valid comma separated list of existing directories")
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	result, err := goplantuml.NewClassDiagram(dirs, ignoredDirectories, *recursive)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -43,11 +53,28 @@ func getDirectories() ([]string, error) {
 		if !fi.Mode().IsDir() {
 			return nil, fmt.Errorf("%s is not a directory", dir)
 		}
-		dir, err := filepath.Abs(dir)
+		dirAbs, err := filepath.Abs(dir)
 		if err != nil {
 			return nil, fmt.Errorf("could not find directory %s", dir)
 		}
-		dirs = append(dirs, dir)
+		dirs = append(dirs, dirAbs)
 	}
 	return dirs, nil
+}
+
+func getIgnoredDirectories(list string) ([]string, error) {
+	result := []string{}
+	list = strings.TrimSpace(list)
+	if list == "" {
+		return result, nil
+	}
+	split := strings.Split(list, ",")
+	for _, dir := range split {
+		dirAbs, err := filepath.Abs(strings.TrimSpace(dir))
+		if err != nil {
+			return nil, fmt.Errorf("could not find directory %s", dir)
+		}
+		result = append(result, dirAbs)
+	}
+	return result, nil
 }
