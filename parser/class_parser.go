@@ -54,7 +54,7 @@ type ClassParser struct {
 
 //NewClassDiagram returns a new classParser with which can Render the class diagram of
 // files int eh given directory
-func NewClassDiagram(directoryPath string, recursive bool) (*ClassParser, error) {
+func NewClassDiagram(directoryPaths []string, recursive bool) (*ClassParser, error) {
 	classParser := &ClassParser{
 		structure:     make(map[string]map[string]*Struct),
 		allInterfaces: make(map[string]struct{}),
@@ -62,26 +62,28 @@ func NewClassDiagram(directoryPath string, recursive bool) (*ClassParser, error)
 		allImports:    make(map[string]string),
 		allAliases:    make(map[string]*Alias),
 	}
-	if recursive {
-		err := filepath.Walk(directoryPath, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if info.IsDir() {
-				if strings.HasPrefix(info.Name(), ".") || info.Name() == "vendor" {
-					return filepath.SkipDir
+	for _, directoryPath := range directoryPaths {
+		if recursive {
+			err := filepath.Walk(directoryPath, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
 				}
-				classParser.parseDirectory(path)
+				if info.IsDir() {
+					if strings.HasPrefix(info.Name(), ".") || info.Name() == "vendor" {
+						return filepath.SkipDir
+					}
+					classParser.parseDirectory(path)
+				}
+				return nil
+			})
+			if err != nil {
+				return nil, err
 			}
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err := classParser.parseDirectory(directoryPath)
-		if err != nil {
-			return nil, err
+		} else {
+			err := classParser.parseDirectory(directoryPath)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 

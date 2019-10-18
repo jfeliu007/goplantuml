@@ -467,7 +467,7 @@ func TestNewClassDiagram(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
-			parser, err := NewClassDiagram(tc.Path, tc.Recursive)
+			parser, err := NewClassDiagram([]string{tc.Path}, tc.Recursive)
 
 			if tc.ExpectedError != "" {
 				if err == nil {
@@ -502,7 +502,7 @@ func TestNewClassDiagram(t *testing.T) {
 
 func TestRender(t *testing.T) {
 
-	parser, err := NewClassDiagram("../testingsupport", false)
+	parser, err := NewClassDiagram([]string{"../testingsupport"}, false)
 	if err != nil {
 		t.Errorf("TestRender: expected no errors, got %s", err.Error())
 		return
@@ -527,5 +527,24 @@ func TestGetPackageName(t *testing.T) {
 	ty := p.getPackageName("int", s)
 	if ty != builtinPackageName {
 		t.Errorf("TestGetPackageName: expecting [%s], got [%s]", builtinPackageName, ty)
+	}
+}
+
+func TestMultipleFolders(t *testing.T) {
+	parser, err := NewClassDiagram([]string{"../testingsupport/subfolder", "../testingsupport/subfolder2"}, false)
+
+	if err != nil {
+		t.Errorf("TestMultipleFolders: expected no errors, got %s", err.Error())
+		return
+	}
+
+	resultRender := parser.Render()
+	result, err := ioutil.ReadFile("../testingsupport/subfolder1-2.puml")
+	if err != nil {
+		t.Errorf("TestMultipleFolders: expected no errors reading testing file, got %s", err.Error())
+	}
+	resultAlt, err := ioutil.ReadFile("../testingsupport/subfolder1-2alt.puml")
+	if string(result) != resultRender && string(resultAlt) != resultRender {
+		t.Errorf("TestMultipleFolders: Expected renders to be the same as %s or %s, but got %s", result, resultAlt, resultRender)
 	}
 }

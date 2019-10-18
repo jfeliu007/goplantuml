@@ -1,0 +1,23 @@
+@startuml
+namespace subfolder {
+    interface test2  {
+        - test() 
+
+    }
+    interface SubfolderInterface  {
+        + SubfolderFunction() bool
+
+    }
+}
+
+
+namespace subfolder2 {
+    class Subfolder2 << (S,Aquamarine) >> {
+        + SubfolderFunction() bool
+
+    }
+}
+
+subfolder.SubfolderInterface <|-- subfolder2.Subfolder2
+
+@enduml
