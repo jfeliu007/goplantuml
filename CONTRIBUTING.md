@@ -31,6 +31,7 @@ The following is a check list that is required for every Pull Request to be acce
 - Maintain the godoc if necessary.
 - Make sure Travis builds still pass (This will happen automatically on the PR).
 - PRs must be reviewed by at least on person before it can be accepted.
+- Regenerate the ClassDiagram.puml by execiting this in the root of the project ```goplantuml -recursive -ignore="./testingsupport" ./ > ClassDiagram.puml```
 - Make sure you have fun coding for the project ;-)
 
 # Code of Conduct
