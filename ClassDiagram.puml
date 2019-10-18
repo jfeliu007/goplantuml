@@ -1,15 +1,17 @@
-int - testingsupport.myInt
 @startuml
-namespace subfolder2 {
-    class Subfolder2 << (S,Aquamarine) >> {
-        + SubfolderFunction() bool
+namespace parser {
+    class Alias << (S,Aquamarine) >> {
+        + Name string
+        + PackageName string
+        + AliasOf string
 
     }
-}
+    class Field << (S,Aquamarine) >> {
+        + Name string
+        + Type string
+        + FullType string
 
-subfolder.SubfolderInterface <|-- subfolder2.Subfolder2
-
-namespace parser {
+    }
     class LineStringBuilder << (S,Aquamarine) >> {
         + WriteLineWithDepth(depth int, str string) 
 
@@ -37,18 +39,6 @@ namespace parser {
         - getStruct(structName string) *Struct
 
         + Render() string
-
-    }
-    class Field << (S,Aquamarine) >> {
-        + Name string
-        + Type string
-        + FullType string
-
-    }
-    class Alias << (S,Aquamarine) >> {
-        + Name string
-        + PackageName string
-        + AliasOf string
 
     }
     class Struct << (S,Aquamarine) >> {
@@ -80,30 +70,4 @@ namespace parser {
 strings.Builder *-- parser.LineStringBuilder
 
 
-namespace testingsupport {
-    class test << (S,Aquamarine) >> {
-        - field int
-
-        - test() 
-
-    }
-    class testingsupport.myInt << (T, #FF7700) >>  {
-    }
-}
-
-subfolder.test2 <|-- testingsupport.test
-
-namespace subfolder {
-    interface test2  {
-        - test() 
-
-    }
-    interface SubfolderInterface  {
-        + SubfolderFunction() bool
-
-    }
-}
-
-
-__builtin__.int #.. testingsupport.myInt
 @enduml
