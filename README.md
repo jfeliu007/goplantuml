@@ -30,6 +30,9 @@ goplantuml [-recursive] path/to/gofiles path/to/gofiles2
 ```
 goplantuml [-recursive] path/to/gofiles path/to/gofiles2 > diagram_file_name.puml
 ```
+```
+goplantuml [-recursive] [-ignore="path/to/ignored/folder1,path/to/ignore/folder2"] path/to/gofiles > diagram_file_name.puml
+```
 
 #### Example
 ```
