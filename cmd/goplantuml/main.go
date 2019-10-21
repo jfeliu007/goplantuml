@@ -14,6 +14,7 @@ import (
 func main() {
 	recursive := flag.Bool("recursive", false, "walk all directories recursively")
 	ignore := flag.String("ignore", "", "comma separated list of folders to ignore")
+	aggregation := flag.Bool("aggregation", false, "renders public aggregations")
 	flag.Parse()
 	dirs, err := getDirectories()
 
@@ -31,6 +32,9 @@ func main() {
 	}
 
 	result, err := goplantuml.NewClassDiagram(dirs, ignoredDirectories, *recursive)
+	result.SetRenderingOptions(&goplantuml.RenderingOptions{
+		Aggregation: *aggregation,
+	})
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"go/ast"
@@ -13,9 +14,10 @@ type NoMatchField struct {
 
 func TestGetFieldType(t *testing.T) {
 	tt := []struct {
-		Name           string
-		ExpectedResult string
-		InputField     ast.Expr
+		Name                     string
+		ExpectedResult           string
+		ExpectedFundamentalTypes []string
+		InputField               ast.Expr
 	}{
 		{
 			Name:           "Test *ast.Ident as primitive",
@@ -23,6 +25,7 @@ func TestGetFieldType(t *testing.T) {
 			InputField: &ast.Ident{
 				Name: "int",
 			},
+			ExpectedFundamentalTypes: []string{},
 		},
 		{
 			Name:           "Test *ast.Ident as not primitive",
@@ -30,6 +33,7 @@ func TestGetFieldType(t *testing.T) {
 			InputField: &ast.Ident{
 				Name: "TestClass",
 			},
+			ExpectedFundamentalTypes: []string{fmt.Sprintf("%s%s", packageConstant, "TestClass")},
 		},
 		{
 			Name:           "Test *ast.ArrayType",
@@ -39,6 +43,7 @@ func TestGetFieldType(t *testing.T) {
 					Name: "int",
 				},
 			},
+			ExpectedFundamentalTypes: []string{},
 		},
 		{
 			Name:           "Test *ast.SelectorExpr",
@@ -51,6 +56,7 @@ func TestGetFieldType(t *testing.T) {
 					Name: "TestClass",
 				},
 			},
+			ExpectedFundamentalTypes: []string{"goplantuml.TestClass"},
 		},
 		{
 			Name:           "Test *ast.MapType",
@@ -63,6 +69,7 @@ func TestGetFieldType(t *testing.T) {
 					Name: "int",
 				},
 			},
+			ExpectedFundamentalTypes: []string{},
 		},
 		{
 			Name:           "Test *ast.StarExpr",
@@ -72,6 +79,7 @@ func TestGetFieldType(t *testing.T) {
 					Name: "int",
 				},
 			},
+			ExpectedFundamentalTypes: []string{},
 		},
 		{
 			Name:           "Test *ast.ChanType",
@@ -81,6 +89,7 @@ func TestGetFieldType(t *testing.T) {
 					Name: "int",
 				},
 			},
+			ExpectedFundamentalTypes: []string{},
 		},
 		{
 			Name:           "Test *ast.StructType",
@@ -101,6 +110,7 @@ func TestGetFieldType(t *testing.T) {
 					},
 				},
 			},
+			ExpectedFundamentalTypes: []string{},
 		},
 		{
 			Name:           "Test *ast.InterfaceType",
@@ -148,10 +158,12 @@ func TestGetFieldType(t *testing.T) {
 					},
 				},
 			},
+			ExpectedFundamentalTypes: []string{},
 		},
 		{
-			Name:           "Test *ast.FuncType with one result",
-			ExpectedResult: "<font color=blue>func</font>(*FooComposed) *FooComposed",
+			Name:                     "Test *ast.FuncType with one result",
+			ExpectedResult:           "<font color=blue>func</font>(*FooComposed) *FooComposed",
+			ExpectedFundamentalTypes: []string{},
 			InputField: &ast.FuncType{
 				Params: &ast.FieldList{
 					List: []*ast.Field{
@@ -184,8 +196,9 @@ func TestGetFieldType(t *testing.T) {
 			},
 		},
 		{
-			Name:           "Test *ast.FuncType with two results",
-			ExpectedResult: "<font color=blue>func</font>(*FooComposed) (*FooComposed, *string)",
+			Name:                     "Test *ast.FuncType with two results",
+			ExpectedResult:           "<font color=blue>func</font>(*FooComposed) (*FooComposed, *string)",
+			ExpectedFundamentalTypes: []string{},
 			InputField: &ast.FuncType{
 				Params: &ast.FieldList{
 					List: []*ast.Field{
@@ -226,13 +239,15 @@ func TestGetFieldType(t *testing.T) {
 			},
 		},
 		{
-			Name:           "Test not match field type",
-			ExpectedResult: "",
-			InputField:     &NoMatchField{},
+			Name:                     "Test not match field type",
+			ExpectedResult:           "",
+			ExpectedFundamentalTypes: []string{},
+			InputField:               &NoMatchField{},
 		},
 		{
-			Name:           "Test *ast.Ellipsis",
-			ExpectedResult: "...int",
+			Name:                     "Test *ast.Ellipsis",
+			ExpectedResult:           "...int",
+			ExpectedFundamentalTypes: []string{},
 			InputField: &ast.Ellipsis{
 				Elt: &ast.Ident{
 					Name: "int",
@@ -245,9 +260,13 @@ func TestGetFieldType(t *testing.T) {
 			inputAliasMap := map[string]string{
 				"puml": "goplantuml",
 			}
-			result := getFieldType(tc.InputField, inputAliasMap)
+			result, fundamentalTypes := getFieldType(tc.InputField, inputAliasMap)
 			if result != tc.ExpectedResult {
 				t.Errorf("Expected result to be %s, got %s", tc.ExpectedResult, result)
+			}
+
+			if !reflect.DeepEqual(fundamentalTypes, tc.ExpectedFundamentalTypes) {
+				t.Errorf("Expected result to be %v, got %v", tc.ExpectedFundamentalTypes, fundamentalTypes)
 			}
 		})
 	}

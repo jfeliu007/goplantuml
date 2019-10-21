@@ -89,12 +89,13 @@ func TestGetOrCreateStruct(t *testing.T) {
 			st := parser.getOrCreateStruct(tc.nameToLookFor)
 			if tc.expectedEmpty {
 				if !reflect.DeepEqual(st, &Struct{
-					PackageName: parser.currentPackageName,
-					Functions:   make([]*Function, 0),
-					Fields:      make([]*Field, 0),
-					Type:        "",
-					Composition: make(map[string]struct{}, 0),
-					Extends:     make(map[string]struct{}, 0),
+					PackageName:  parser.currentPackageName,
+					Functions:    make([]*Function, 0),
+					Fields:       make([]*Field, 0),
+					Type:         "",
+					Composition:  make(map[string]struct{}, 0),
+					Extends:      make(map[string]struct{}, 0),
+					Aggregations: make(map[string]struct{}, 0),
 				}) {
 					t.Errorf("Expected resulting structure to be equal to %v, got %v", tc.structure, st)
 				}
@@ -177,7 +178,7 @@ func TestRenderStructFields(t *testing.T) {
 	}
 }
 
-func TestRenderStructutes(t *testing.T) {
+func TestRenderStructures(t *testing.T) {
 
 	structMap := map[string]*Struct{
 		"MainClass": getTestStruct(),
@@ -189,6 +190,21 @@ func TestRenderStructutes(t *testing.T) {
 	if lineB.String() != expectedResult {
 		t.Errorf("TestRenderStructures: expected %s, got %s", expectedResult, lineB.String())
 	}
+	st := getTestStruct()
+	st.Aggregations = map[string]struct{}{"File": {}}
+	structMap = map[string]*Struct{
+		"MainClass": st,
+	}
+	lineB = &LineStringBuilder{}
+	parser = getEmptyParser("main")
+	parser.SetRenderingOptions(&RenderingOptions{
+		Aggregation: true,
+	})
+	parser.renderStructures("main", structMap, lineB)
+	expectedResult = "namespace main {\n    class MainClass << (S,Aquamarine) >> {\n        - privateField int\n\n        + PublicField error\n\n        - foo( int,  string) (error, int)\n\n        + Boo( string,  int) int\n\n    }\n}\nfoopack.AnotherClass *-- main.MainClass\n\nmain.NewClass <|-- main.MainClass\n\nmain.MainClass o-- main.File\n\n"
+	if lineB.String() != expectedResult {
+		t.Errorf("TestRenderStructures: expected %s, got %s", expectedResult, lineB.String())
+	}
 }
 
 func TestRenderStructure(t *testing.T) {
@@ -197,7 +213,8 @@ func TestRenderStructure(t *testing.T) {
 	lineBuilder := &LineStringBuilder{}
 	compositionBuilder := &LineStringBuilder{}
 	extendBuilder := &LineStringBuilder{}
-	parser.renderStructure(st, "main", "TestClass", lineBuilder, compositionBuilder, extendBuilder)
+	aggregationsBuilder := &LineStringBuilder{}
+	parser.renderStructure(st, "main", "TestClass", lineBuilder, compositionBuilder, extendBuilder, aggregationsBuilder)
 	expectedLineBuilder := "    class TestClass << (S,Aquamarine) >> {\n        - privateField int\n\n        + PublicField error\n\n        - foo( int,  string) (error, int)\n\n        + Boo( string,  int) int\n\n    }\n"
 	if lineBuilder.String() != expectedLineBuilder {
 		t.Errorf("TestRenderStructure: Expected lineBuilder [%s] got [%s]", expectedLineBuilder, lineBuilder.String())
@@ -209,6 +226,10 @@ func TestRenderStructure(t *testing.T) {
 	expectedExtends := "main.NewClass <|-- main.TestClass\n"
 	if extendBuilder.String() != expectedExtends {
 		t.Errorf("TestRenderStructure: Expected extendBuilder %s got %s", expectedExtends, extendBuilder.String())
+	}
+	expectedAggregations := ""
+	if aggregationsBuilder.String() != expectedAggregations {
+		t.Errorf("TestRenderStructure: Expected aggregationsBuilder %s got %s", expectedAggregations, aggregationsBuilder.String())
 	}
 }
 
@@ -222,6 +243,7 @@ func getTestStruct() *Struct {
 		Extends: map[string]struct{}{
 			"NewClass": {},
 		},
+		Aggregations: map[string]struct{}{},
 		Fields: []*Field{
 			{
 				Name: "privateField",
@@ -378,6 +400,7 @@ func TestRenderStructMethods(t *testing.T) {
 
 func getEmptyParser(packageName string) *ClassParser {
 	result := &ClassParser{
+		renderingOptions:   &RenderingOptions{},
 		currentPackageName: packageName,
 		structure:          make(map[string]map[string]*Struct),
 		allInterfaces:      make(map[string]struct{}),
@@ -568,5 +591,54 @@ func TestIgnoreDirectories(t *testing.T) {
 	if st != nil {
 		t.Errorf("TestIgnoreDirectories: expected st to be nil, got %v", st)
 		return
+	}
+}
+
+func TestRenderAggregations(t *testing.T) {
+	parser := getEmptyParser("main")
+	st := &Struct{
+		PackageName: "main",
+		Aggregations: map[string]struct{}{
+			"File": {},
+		},
+	}
+	parser.renderingOptions.Aggregation = true
+	aggregationsBuilder := &LineStringBuilder{}
+	parser.renderAggregations(st, "TestClass", aggregationsBuilder)
+	expectedResult := "main.TestClass o-- main.File\n"
+	if aggregationsBuilder.String() != expectedResult {
+		t.Errorf("TestRenderExtends: Expected %s got %s", expectedResult, aggregationsBuilder.String())
+	}
+
+	st = &Struct{
+		PackageName: "main",
+		Fields: []*Field{
+			{
+				Name: "file",
+				Type: "File",
+			},
+		},
+	}
+	parser.renderingOptions.Aggregation = true
+	aggregationsBuilder = &LineStringBuilder{}
+	parser.renderAggregations(st, "TestClass", aggregationsBuilder)
+	expectedResult = ""
+	if aggregationsBuilder.String() != expectedResult {
+		t.Errorf("TestRenderExtends: Expected %s got %s", expectedResult, aggregationsBuilder.String())
+	}
+}
+
+func TestSetRenderingOptions(t *testing.T) {
+	parser := getEmptyParser("main")
+	emptyRenderingOptions := &RenderingOptions{}
+	if !reflect.DeepEqual(parser.renderingOptions, emptyRenderingOptions) {
+		t.Errorf("TestRenderingOptions: expected renderingOptions to be %v got %v", emptyRenderingOptions, parser.renderingOptions)
+	}
+	newRenderingOptions := &RenderingOptions{
+		Aggregation: true,
+	}
+	parser.SetRenderingOptions(newRenderingOptions)
+	if !reflect.DeepEqual(parser.renderingOptions, newRenderingOptions) {
+		t.Errorf("TestRenderingOptions: expected renderingOptions to be %v got %v", newRenderingOptions, parser.renderingOptions)
 	}
 }
