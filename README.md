@@ -31,7 +31,7 @@ goplantuml [-recursive] path/to/gofiles path/to/gofiles2
 goplantuml [-recursive] path/to/gofiles path/to/gofiles2 > diagram_file_name.puml
 ```
 ```
-goplantuml [-recursive] [-ignore="path/to/ignored/folder1,path/to/ignore/folder2"] path/to/gofiles > diagram_file_name.puml
+goplantuml [-recursive] [-aggregation] [-ignore="path/to/ignored/folder1,path/to/ignore/folder2"] path/to/gofiles > diagram_file_name.puml
 ```
 
 #### Example
@@ -126,6 +126,7 @@ type MyStruct2 struct {
 
 //MyStruct3 will have a foo() function but the return value is not a bool, so it will not have any relationship with MyInterface
 type MyStruct3 struct {
+    Foo MyStruct1
 }
 
 func (s3 *MyStruct3) foo() {
@@ -149,11 +150,15 @@ namespace testingsupport {
     class MyStruct3 << (S,Aquamarine) >> {
         - foo() 
 
+        + Foo MyStruct1
+
     }
 }
 testingsupport.MyStruct1 *-- testingsupport.MyStruct2
 
 testingsupport.MyInterface <|-- testingsupport.MyStruct1
+
+testingsupport.MyStruct3 o-- testingsupport.MyStruct1
 
 @enduml
 ```
