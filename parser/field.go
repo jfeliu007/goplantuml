@@ -18,33 +18,41 @@ type Field struct {
 
 //Returns a string representation of the given expression if it was recognized.
 //Refer to the implementation to see the different string representations.
-func getFieldType(exp ast.Expr, aliases map[string]string) string {
+func getFieldType(exp ast.Expr, aliases map[string]string) (string, []string) {
 	switch v := exp.(type) {
 	case *ast.Ident:
 		if isPrimitive(v) {
-			return v.Name
+			return v.Name, []string{}
 		}
-		return fmt.Sprintf("%s%s", packageConstant, v.Name)
+		t := fmt.Sprintf("%s%s", packageConstant, v.Name)
+		return t, []string{t}
 	case *ast.ArrayType:
-		return fmt.Sprintf("[]%s", getFieldType(v.Elt, aliases))
+		t, fundamentalTypes := getFieldType(v.Elt, aliases)
+		return fmt.Sprintf("[]%s", t), fundamentalTypes
 	case *ast.SelectorExpr:
 		packageName := v.X.(*ast.Ident).Name
 		if realPackageName, ok := aliases[packageName]; ok {
 			packageName = realPackageName
 		}
-		return fmt.Sprintf("%s.%s", packageName, v.Sel.Name)
+		t := fmt.Sprintf("%s.%s", packageName, v.Sel.Name)
+		return t, []string{t}
 	case *ast.MapType:
-		return fmt.Sprintf("<font color=blue>map</font>[%s]%s", getFieldType(v.Key, aliases), getFieldType(v.Value, aliases))
+		t1, f1 := getFieldType(v.Key, aliases)
+		t2, f2 := getFieldType(v.Value, aliases)
+		return fmt.Sprintf("<font color=blue>map</font>[%s]%s", t1, t2), append(f1, f2...)
 	case *ast.StarExpr:
-		return fmt.Sprintf("*%s", getFieldType(v.X, aliases))
+		t, f := getFieldType(v.X, aliases)
+		return fmt.Sprintf("*%s", t), f
 	case *ast.ChanType:
-		return fmt.Sprintf("<font color=blue>chan</font> %s", getFieldType(v.Value, aliases))
+		t, f := getFieldType(v.Value, aliases)
+		return fmt.Sprintf("<font color=blue>chan</font> %s", t), f
 	case *ast.StructType:
 		fieldList := make([]string, 0)
 		for _, field := range v.Fields.List {
-			fieldList = append(fieldList, getFieldType(field.Type, aliases))
+			t, _ := getFieldType(field.Type, aliases)
+			fieldList = append(fieldList, t)
 		}
-		return fmt.Sprintf("<font color=blue>struct</font>{%s}", strings.Join(fieldList, ", "))
+		return fmt.Sprintf("<font color=blue>struct</font>{%s}", strings.Join(fieldList, ", ")), []string{}
 	case *ast.InterfaceType:
 		methods := make([]string, 0)
 		for _, field := range v.Methods.List {
@@ -52,9 +60,10 @@ func getFieldType(exp ast.Expr, aliases map[string]string) string {
 			if field.Names != nil {
 				methodName = field.Names[0].Name
 			}
-			methods = append(methods, methodName+" "+getFieldType(field.Type, aliases))
+			t, _ := getFieldType(field.Type, aliases)
+			methods = append(methods, methodName+" "+t)
 		}
-		return fmt.Sprintf("<font color=blue>interface</font>{%s}", strings.Join(methods, "; "))
+		return fmt.Sprintf("<font color=blue>interface</font>{%s}", strings.Join(methods, "; ")), []string{}
 	case *ast.FuncType:
 		function := getFunction(v, "", aliases, "")
 		params := make([]string, 0)
@@ -71,11 +80,12 @@ func getFieldType(exp ast.Expr, aliases map[string]string) string {
 		} else {
 			returns = strings.Join(returnList, "")
 		}
-		return fmt.Sprintf("<font color=blue>func</font>(%s) %s", strings.Join(params, ", "), returns)
+		return fmt.Sprintf("<font color=blue>func</font>(%s) %s", strings.Join(params, ", "), returns), []string{}
 	case *ast.Ellipsis:
-		return fmt.Sprintf("...%s", getFieldType(v.Elt, aliases))
+		t, _ := getFieldType(v.Elt, aliases)
+		return fmt.Sprintf("...%s", t), []string{}
 	}
-	return ""
+	return "", []string{}
 }
 
 var globalPrimitives = map[string]struct{}{

@@ -2,17 +2,19 @@ package parser
 
 import (
 	"go/ast"
+	"unicode"
 )
 
 //Struct represent a struct in golang, it can be of Type "class" or "interface" and can be associated
 //with other structs via Composition and Extends
 type Struct struct {
-	PackageName string
-	Functions   []*Function
-	Fields      []*Field
-	Type        string
-	Composition map[string]struct{}
-	Extends     map[string]struct{}
+	PackageName  string
+	Functions    []*Function
+	Fields       []*Field
+	Type         string
+	Composition  map[string]struct{}
+	Extends      map[string]struct{}
+	Aggregations map[string]struct{}
 }
 
 // ImplementsInterface returns true if the struct st conforms ot the given interface
@@ -61,18 +63,28 @@ func (st *Struct) AddToExtends(fType string) {
 	st.Extends[fType] = struct{}{}
 }
 
+//AddToAggregation adds an aggregation type to the list of aggregations
+func (st *Struct) AddToAggregation(fType string) {
+	st.Aggregations[fType] = struct{}{}
+}
+
 //AddField adds a field into this structure. It parses the ast.Field and extract all
 //needed information
 func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
-	theType := getFieldType(field.Type, aliases)
+	theType, fundamentalTypes := getFieldType(field.Type, aliases)
 	theType = replacePackageConstant(theType, "")
 	if field.Names != nil {
-		theType := getFieldType(field.Type, aliases)
 		theType = replacePackageConstant(theType, "")
-		st.Fields = append(st.Fields, &Field{
+		newField := &Field{
 			Name: field.Names[0].Name,
 			Type: theType,
-		})
+		}
+		st.Fields = append(st.Fields, newField)
+		if unicode.IsUpper(rune(newField.Name[0])) {
+			for _, t := range fundamentalTypes {
+				st.AddToAggregation(replacePackageConstant(t, st.PackageName))
+			}
+		}
 	} else if field.Type != nil {
 		if theType[0] == "*"[0] {
 			theType = theType[1:]

@@ -348,10 +348,11 @@ func TestAddField(t *testing.T) {
 				FullNameReturnValues: []string{"error", "int"},
 			},
 		},
-		Type:        "class",
-		Fields:      make([]*Field, 0),
-		Composition: make(map[string]struct{}),
-		Extends:     make(map[string]struct{}),
+		Type:         "class",
+		Fields:       make([]*Field, 0),
+		Composition:  make(map[string]struct{}),
+		Extends:      make(map[string]struct{}),
+		Aggregations: make(map[string]struct{}),
 	}
 	st.AddField(&ast.Field{
 		Names: []*ast.Ident{
@@ -381,8 +382,24 @@ func TestAddField(t *testing.T) {
 			},
 		},
 	}, make(map[string]string))
+
 	if !arrayContains(st.Composition, "FooComposed") {
 		t.Errorf("TestAddField: Expecting FooComposed to be part of the compositions ,but the array had %v", st.Composition)
+	}
+	st.AddField(&ast.Field{
+		Names: []*ast.Ident{
+			{
+				Name: "Foo",
+			},
+		},
+		Type: &ast.StarExpr{
+			X: &ast.Ident{
+				Name: "FooComposed",
+			},
+		},
+	}, make(map[string]string))
+	if !arrayContains(st.Aggregations, "main.FooComposed") {
+		t.Errorf("TestAddField: Expecting main.FooComposed to be part of the aggregations ,but the array had %v", st.Aggregations)
 	}
 }
 

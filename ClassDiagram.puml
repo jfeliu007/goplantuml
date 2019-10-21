@@ -16,7 +16,12 @@ namespace parser {
         + WriteLineWithDepth(depth int, str string) 
 
     }
+    class RenderingOptions << (S,Aquamarine) >> {
+        + Aggregation bool
+
+    }
     class ClassParser << (S,Aquamarine) >> {
+        - renderingOptions *RenderingOptions
         - structure <font color=blue>map</font>[string]<font color=blue>map</font>[string]*Struct
         - currentPackageName string
         - allInterfaces <font color=blue>map</font>[string]<font color=blue>struct</font>{}
@@ -29,8 +34,9 @@ namespace parser {
         - parseDirectory(directoryPath string) error
         - parseFileDeclarations(node ast.Decl) 
         - renderStructures(pack string, structures <font color=blue>map</font>[string]*Struct, str *LineStringBuilder) 
-        - renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder) 
+        - renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) 
         - renderCompositions(structure *Struct, name string, composition *LineStringBuilder) 
+        - renderAggregations(structure *Struct, name string, aggregations *LineStringBuilder) 
         - getPackageName(t string, st *Struct) string
         - renderExtends(structure *Struct, name string, extends *LineStringBuilder) 
         - renderStructMethods(structure *Struct, privateMethods *LineStringBuilder, publicMethods *LineStringBuilder) 
@@ -39,21 +45,7 @@ namespace parser {
         - getStruct(structName string) *Struct
 
         + Render() string
-
-    }
-    class Struct << (S,Aquamarine) >> {
-        + PackageName string
-        + Functions []*Function
-        + Fields []*Field
-        + Type string
-        + Composition <font color=blue>map</font>[string]<font color=blue>struct</font>{}
-        + Extends <font color=blue>map</font>[string]<font color=blue>struct</font>{}
-
-        + ImplementsInterface(inter *Struct) bool
-        + AddToComposition(fType string) 
-        + AddToExtends(fType string) 
-        + AddField(field *ast.Field, aliases <font color=blue>map</font>[string]string) 
-        + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
+        + SetRenderingOptions(ro *RenderingOptions) 
 
     }
     class Function << (S,Aquamarine) >> {
@@ -66,8 +58,29 @@ namespace parser {
         + SignturesAreEqual(function *Function) bool
 
     }
+    class Struct << (S,Aquamarine) >> {
+        + PackageName string
+        + Functions []*Function
+        + Fields []*Field
+        + Type string
+        + Composition <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+        + Extends <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+        + Aggregations <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+
+        + ImplementsInterface(inter *Struct) bool
+        + AddToComposition(fType string) 
+        + AddToExtends(fType string) 
+        + AddToAggregation(fType string) 
+        + AddField(field *ast.Field, aliases <font color=blue>map</font>[string]string) 
+        + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
+
+    }
 }
 strings.Builder *-- parser.LineStringBuilder
 
+
+parser.Function o-- parser.Field
+parser.Struct o-- parser.Function
+parser.Struct o-- parser.Field
 
 @enduml

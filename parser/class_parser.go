@@ -41,9 +41,15 @@ func (lsb *LineStringBuilder) WriteLineWithDepth(depth int, str string) {
 	lsb.WriteString("\n")
 }
 
+//RenderingOptions will allow the class parser to optionally enebale or disable the things to render.
+type RenderingOptions struct {
+	Aggregation bool
+}
+
 //ClassParser contains the structure of the parsed files. The structure is a map of package_names that contains
 //a map of structure_names -> Structs
 type ClassParser struct {
+	renderingOptions   *RenderingOptions
 	structure          map[string]map[string]*Struct
 	currentPackageName string
 	allInterfaces      map[string]struct{}
@@ -56,11 +62,12 @@ type ClassParser struct {
 // files int eh given directory
 func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recursive bool) (*ClassParser, error) {
 	classParser := &ClassParser{
-		structure:     make(map[string]map[string]*Struct),
-		allInterfaces: make(map[string]struct{}),
-		allStructs:    make(map[string]struct{}),
-		allImports:    make(map[string]string),
-		allAliases:    make(map[string]*Alias),
+		renderingOptions: &RenderingOptions{},
+		structure:        make(map[string]map[string]*Struct),
+		allInterfaces:    make(map[string]struct{}),
+		allStructs:       make(map[string]struct{}),
+		allImports:       make(map[string]string),
+		allAliases:       make(map[string]*Alias),
 	}
 	ignoreDirectoryMap := map[string]struct{}{}
 	for _, dir := range ignoreDirectories {
@@ -172,7 +179,7 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 				}
 			default:
 				declarationType = "alias"
-				aliasType := getFieldType(c, p.allImports)
+				aliasType, _ := getFieldType(c, p.allImports)
 				if !isPrimitiveString(typeName) {
 					typeName = fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
 				}
@@ -195,7 +202,7 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 	case *ast.FuncDecl:
 		if decl.Recv != nil {
 			// Only get in when the function is defined for a structure. Global functions are not needed for class diagram
-			theType := getFieldType(decl.Recv.List[0].Type, p.allImports)
+			theType, _ := getFieldType(decl.Recv.List[0].Type, p.allImports)
 			theType = replacePackageConstant(theType, "")
 			if theType[0] == "*"[0] {
 				theType = theType[1:]
@@ -237,13 +244,17 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 	if len(structures) > 0 {
 		composition := &LineStringBuilder{}
 		extends := &LineStringBuilder{}
+		aggregations := &LineStringBuilder{}
 		str.WriteLineWithDepth(0, fmt.Sprintf(`namespace %s {`, pack))
 		for name, structure := range structures {
-			p.renderStructure(structure, pack, name, str, composition, extends)
+			p.renderStructure(structure, pack, name, str, composition, extends, aggregations)
 		}
 		str.WriteLineWithDepth(0, fmt.Sprintf(`}`))
 		str.WriteLineWithDepth(0, composition.String())
 		str.WriteLineWithDepth(0, extends.String())
+		if p.renderingOptions.Aggregation {
+			str.WriteLineWithDepth(0, aggregations.String())
+		}
 	}
 }
 
@@ -251,7 +262,7 @@ func renderAlias(name string, alias *Alias, str *LineStringBuilder) {
 	str.WriteLineWithDepth(0, fmt.Sprintf("%s #.. %s", alias.Name, alias.AliasOf))
 }
 
-func (p *ClassParser) renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder) {
+func (p *ClassParser) renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) {
 
 	privateFields := &LineStringBuilder{}
 	publicFields := &LineStringBuilder{}
@@ -272,6 +283,7 @@ func (p *ClassParser) renderStructure(structure *Struct, pack string, name strin
 	p.renderStructMethods(structure, privateMethods, publicMethods)
 	p.renderCompositions(structure, name, composition)
 	p.renderExtends(structure, name, extends)
+	p.renderAggregations(structure, name, aggregations)
 	if privateFields.Len() > 0 {
 		str.WriteLineWithDepth(0, privateFields.String())
 	}
@@ -294,6 +306,18 @@ func (p *ClassParser) renderCompositions(structure *Struct, name string, composi
 			c = fmt.Sprintf("%s.%s", p.getPackageName(c, structure), c)
 		}
 		composition.WriteLineWithDepth(0, fmt.Sprintf(`%s *-- %s.%s`, c, structure.PackageName, name))
+	}
+}
+
+func (p *ClassParser) renderAggregations(structure *Struct, name string, aggregations *LineStringBuilder) {
+
+	for a := range structure.Aggregations {
+		if !strings.Contains(a, ".") {
+			a = fmt.Sprintf("%s.%s", p.getPackageName(a, structure), a)
+		}
+		if p.getPackageName(a, structure) != builtinPackageName {
+			aggregations.WriteLineWithDepth(0, fmt.Sprintf(`%s.%s o-- %s`, structure.PackageName, name, a))
+		}
 	}
 }
 
@@ -361,12 +385,13 @@ func (p *ClassParser) getOrCreateStruct(name string) *Struct {
 	result, ok := p.structure[p.currentPackageName][name]
 	if !ok {
 		result = &Struct{
-			PackageName: p.currentPackageName,
-			Functions:   make([]*Function, 0),
-			Fields:      make([]*Field, 0),
-			Type:        "",
-			Composition: make(map[string]struct{}, 0),
-			Extends:     make(map[string]struct{}, 0),
+			PackageName:  p.currentPackageName,
+			Functions:    make([]*Function, 0),
+			Fields:       make([]*Field, 0),
+			Type:         "",
+			Composition:  make(map[string]struct{}, 0),
+			Extends:      make(map[string]struct{}, 0),
+			Aggregations: make(map[string]struct{}, 0),
 		}
 		p.structure[p.currentPackageName][name] = result
 	}
@@ -381,4 +406,9 @@ func (p *ClassParser) getStruct(structName string) *Struct {
 		return nil
 	}
 	return pack[split[1]]
+}
+
+//SetRenderingOptions Sets the rendering options for the Render() Function
+func (p *ClassParser) SetRenderingOptions(ro *RenderingOptions) {
+	p.renderingOptions = ro
 }
