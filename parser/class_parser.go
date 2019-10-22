@@ -159,79 +159,89 @@ func (p *ClassParser) parseDirectory(directoryPath string) error {
 func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 	switch decl := node.(type) {
 	case *ast.GenDecl:
-		spec := decl.Specs[0]
-		var declarationType string
-		var typeName string
-		var alias *Alias
-		switch v := spec.(type) {
-		case *ast.TypeSpec:
-			typeName = v.Name.Name
-			switch c := v.Type.(type) {
-			case *ast.StructType:
-				declarationType = "class"
-				for _, f := range c.Fields.List {
-					p.getOrCreateStruct(typeName).AddField(f, p.allImports)
+		p.handleGenDecl(decl)
+	case *ast.FuncDecl:
+		p.handleFuncDecl(decl)
+	}
+}
+
+func (p *ClassParser) handleFuncDecl(decl *ast.FuncDecl) {
+
+	if decl.Recv != nil {
+		// Only get in when the function is defined for a structure. Global functions are not needed for class diagram
+		theType, _ := getFieldType(decl.Recv.List[0].Type, p.allImports)
+		theType = replacePackageConstant(theType, "")
+		if theType[0] == "*"[0] {
+			theType = theType[1:]
+		}
+		structure := p.getOrCreateStruct(theType)
+		if structure.Type == "" {
+			structure.Type = "class"
+		}
+
+		fullName := fmt.Sprintf("%s.%s", p.currentPackageName, theType)
+		p.allStructs[fullName] = struct{}{}
+		structure.AddMethod(&ast.Field{
+			Names:   []*ast.Ident{decl.Name},
+			Doc:     decl.Doc,
+			Type:    decl.Type,
+			Tag:     nil,
+			Comment: nil,
+		}, p.allImports)
+	}
+}
+
+func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
+
+	spec := decl.Specs[0]
+	var declarationType string
+	var typeName string
+	var alias *Alias
+	switch v := spec.(type) {
+	case *ast.TypeSpec:
+		typeName = v.Name.Name
+		switch c := v.Type.(type) {
+		case *ast.StructType:
+			declarationType = "class"
+			for _, f := range c.Fields.List {
+				p.getOrCreateStruct(typeName).AddField(f, p.allImports)
+			}
+		case *ast.InterfaceType:
+			declarationType = "interface"
+			for _, f := range c.Methods.List {
+				switch t := f.Type.(type) {
+				case *ast.FuncType:
+					p.getOrCreateStruct(typeName).AddMethod(f, p.allImports)
+					break
+				case *ast.Ident:
+					f, _ := getFieldType(t, p.allImports)
+					st := p.getOrCreateStruct(typeName)
+					f = replacePackageConstant(f, st.PackageName)
+					st.AddToComposition(f)
+					break
 				}
-			case *ast.InterfaceType:
-				declarationType = "interface"
-				for _, f := range c.Methods.List {
-					switch t := f.Type.(type) {
-					case *ast.FuncType:
-						p.getOrCreateStruct(typeName).AddMethod(f, p.allImports)
-						break
-					case *ast.Ident:
-						f, _ := getFieldType(t, p.allImports)
-						st := p.getOrCreateStruct(typeName)
-						f = replacePackageConstant(f, st.PackageName)
-						st.AddToComposition(f)
-						break
-					}
-				}
-			default:
-				declarationType = "alias"
-				aliasType, _ := getFieldType(c, p.allImports)
-				if !isPrimitiveString(typeName) {
-					typeName = fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
-				}
-				alias = getNewAlias(aliasType, p.currentPackageName, typeName)
 			}
 		default:
-			// Not needed for class diagrams (Imports, global variables, regular functions, etc)
-			return
-		}
-		p.getOrCreateStruct(typeName).Type = declarationType
-		fullName := fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
-		switch declarationType {
-		case "interface":
-			p.allInterfaces[fullName] = struct{}{}
-		case "class":
-			p.allStructs[fullName] = struct{}{}
-		case "alias":
-			p.allAliases[typeName] = alias
-		}
-	case *ast.FuncDecl:
-		if decl.Recv != nil {
-			// Only get in when the function is defined for a structure. Global functions are not needed for class diagram
-			theType, _ := getFieldType(decl.Recv.List[0].Type, p.allImports)
-			theType = replacePackageConstant(theType, "")
-			if theType[0] == "*"[0] {
-				theType = theType[1:]
+			declarationType = "alias"
+			aliasType, _ := getFieldType(c, p.allImports)
+			if !isPrimitiveString(typeName) {
+				typeName = fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
 			}
-			structure := p.getOrCreateStruct(theType)
-			if structure.Type == "" {
-				structure.Type = "class"
-			}
-
-			fullName := fmt.Sprintf("%s.%s", p.currentPackageName, theType)
-			p.allStructs[fullName] = struct{}{}
-			structure.AddMethod(&ast.Field{
-				Names:   []*ast.Ident{decl.Name},
-				Doc:     decl.Doc,
-				Type:    decl.Type,
-				Tag:     nil,
-				Comment: nil,
-			}, p.allImports)
+			alias = getNewAlias(aliasType, p.currentPackageName, typeName)
 		}
+	default:
+		// Not needed for class diagrams (Imports, global variables, regular functions, etc)
+		return
+	}
+	p.getOrCreateStruct(typeName).Type = declarationType
+	fullName := fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
+	switch declarationType {
+	case "interface":
+		p.allInterfaces[fullName] = struct{}{}
+	case "class":
+		p.allStructs[fullName] = struct{}{}
+	case "alias":
+		p.allAliases[typeName] = alias
 	}
 }
 
