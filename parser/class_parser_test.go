@@ -587,6 +587,10 @@ func TestIgnoreDirectories(t *testing.T) {
 
 	parser, err = NewClassDiagram([]string{"../testingsupport"}, []string{"../testingsupport/subfolder2"}, true)
 
+	if err != nil {
+		t.Errorf("TestIgnoreDirectories: expected no errors, got %s", err.Error())
+		return
+	}
 	st = parser.getStruct("subfolder2.Subfolder2")
 	if st != nil {
 		t.Errorf("TestIgnoreDirectories: expected st to be nil, got %v", st)
@@ -640,5 +644,19 @@ func TestSetRenderingOptions(t *testing.T) {
 	parser.SetRenderingOptions(newRenderingOptions)
 	if !reflect.DeepEqual(parser.renderingOptions, newRenderingOptions) {
 		t.Errorf("TestRenderingOptions: expected renderingOptions to be %v got %v", newRenderingOptions, parser.renderingOptions)
+	}
+}
+
+func TestRenderCompositionFromInterfaces(t *testing.T) {
+
+	parser, err := NewClassDiagram([]string{"../testingsupport/subfolder"}, []string{}, false)
+
+	if err != nil {
+		t.Errorf("TestIgnoreDirectories: expected no errors, got %s", err.Error())
+		return
+	}
+	st := parser.getStruct("subfolder.test2")
+	if _, ok := st.Composition["subfolder.TestInterfaceAsField"]; !ok {
+		t.Errorf("TestRenderCompositionFromInterfaces: expected st to have a composition dependency to subfolder.TestInterfaceAsField")
 	}
 }
