@@ -5,5 +5,6 @@ type test2 interface {
 	test()
 }
 
+//TestInterfaceAsField testing interface
 type TestInterfaceAsField interface {
 }
