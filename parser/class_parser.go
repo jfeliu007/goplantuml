@@ -175,7 +175,17 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 			case *ast.InterfaceType:
 				declarationType = "interface"
 				for _, f := range c.Methods.List {
-					p.getOrCreateStruct(typeName).AddMethod(f, p.allImports)
+					switch t := f.Type.(type) {
+					case *ast.FuncType:
+						p.getOrCreateStruct(typeName).AddMethod(f, p.allImports)
+						break
+					case *ast.Ident:
+						f, _ := getFieldType(t, p.allImports)
+						st := p.getOrCreateStruct(typeName)
+						f = replacePackageConstant(f, st.PackageName)
+						st.AddToComposition(f)
+						break
+					}
 				}
 			default:
 				declarationType = "alias"
