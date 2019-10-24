@@ -768,46 +768,40 @@ func TestRenderingOptions(t *testing.T) {
 	}{
 		{
 			Name:        "Show Fields",
-			InputFolder: "../testingsupport",
+			InputFolder: "../testingsupport/renderingoptions",
 			RenderingOptions: &RenderingOptions{
 				Fields: true,
 			},
 			ExpectedResult: `@startuml
-namespace testingsupport {
-    class test << (S,Aquamarine) >> {
-        - field int
+namespace main {
+    class Test << (S,Aquamarine) >> {
+        - integer int
 
-        - test() 
+        - function() 
 
-    }
-    class testingsupport.myInt << (T, #FF7700) >>  {
     }
 }
 
 
-"__builtin__.int" #.. "testingsupport.myInt"
 @enduml
 `,
 		}, {
 			Name:        "Hide Fields",
-			InputFolder: "../testingsupport",
+			InputFolder: "../testingsupport/renderingoptions",
 			RenderingOptions: &RenderingOptions{
 				Fields: false,
 			},
 			ExpectedResult: `@startuml
-namespace testingsupport {
-    class test << (S,Aquamarine) >> {
-        - field int
+namespace main {
+    class Test << (S,Aquamarine) >> {
+        - integer int
 
-        - test() 
+        - function() 
 
-    }
-    class testingsupport.myInt << (T, #FF7700) >>  {
     }
 }
 
 
-"__builtin__.int" #.. "testingsupport.myInt"
 hide fields
 @enduml
 `,
