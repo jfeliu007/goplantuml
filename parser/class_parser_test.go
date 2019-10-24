@@ -773,7 +773,7 @@ func TestRenderingOptions(t *testing.T) {
 				Fields: true,
 			},
 			ExpectedResult: `@startuml
-namespace main {
+namespace renderingoptions {
     class Test << (S,Aquamarine) >> {
         - integer int
 
@@ -792,7 +792,7 @@ namespace main {
 				Fields: false,
 			},
 			ExpectedResult: `@startuml
-namespace main {
+namespace renderingoptions {
     class Test << (S,Aquamarine) >> {
         - integer int
 
