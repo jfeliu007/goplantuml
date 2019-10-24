@@ -6,7 +6,7 @@ namespace subfolder2 {
     }
 }
 
-subfolder3.SubfolderInterface <|-- subfolder2.Subfolder2
+"subfolder3.SubfolderInterface" <|-- "subfolder2.Subfolder2"
 
 namespace subfolder3 {
     interface SubfolderInterface  {

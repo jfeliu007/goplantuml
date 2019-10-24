@@ -194,9 +194,9 @@ func (p *ClassParser) handleFuncDecl(decl *ast.FuncDecl) {
 func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 
 	spec := decl.Specs[0]
-	var declarationType string
 	var typeName string
 	var alias *Alias
+	declarationType := "alias"
 	switch v := spec.(type) {
 	case *ast.TypeSpec:
 		typeName = v.Name.Name
@@ -222,12 +222,19 @@ func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 				}
 			}
 		default:
-			declarationType = "alias"
+			basicType, _ := getFieldType(getBasicType(c), p.allImports)
+
 			aliasType, _ := getFieldType(c, p.allImports)
+			aliasType = replacePackageConstant(aliasType, "")
 			if !isPrimitiveString(typeName) {
 				typeName = fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
 			}
-			alias = getNewAlias(aliasType, p.currentPackageName, typeName)
+			packageName := p.currentPackageName
+			if isPrimitiveString(basicType) {
+				packageName = builtinPackageName
+			}
+			alias = getNewAlias(fmt.Sprintf("%s.%s", packageName, aliasType), p.currentPackageName, typeName)
+
 		}
 	default:
 		// Not needed for class diagrams (Imports, global variables, regular functions, etc)
@@ -243,6 +250,24 @@ func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 	case "alias":
 		p.allAliases[typeName] = alias
 	}
+}
+
+// If this element is an array or a pointer, this funciton will return the type that is closer to these
+// two definitions. For example []***map[int] string will return map[int]string
+func getBasicType(theType ast.Expr) ast.Expr {
+	switch t := theType.(type) {
+	case *ast.ArrayType:
+		return getBasicType(t.Elt)
+	case *ast.StarExpr:
+		return getBasicType(t.X)
+	case *ast.MapType:
+		return getBasicType(t.Value)
+	case *ast.ChanType:
+		return getBasicType(t.Value)
+	case *ast.Ellipsis:
+		return getBasicType(t.Elt)
+	}
+	return theType
 }
 
 //Render returns a string of the class diagram that this parser has generated.
@@ -279,7 +304,7 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 }
 
 func renderAlias(name string, alias *Alias, str *LineStringBuilder) {
-	str.WriteLineWithDepth(0, fmt.Sprintf("%s #.. %s", alias.Name, alias.AliasOf))
+	str.WriteLineWithDepth(0, fmt.Sprintf(`"%s" #.. "%s"`, alias.Name, alias.AliasOf))
 }
 
 func (p *ClassParser) renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) {
@@ -325,7 +350,7 @@ func (p *ClassParser) renderCompositions(structure *Struct, name string, composi
 		if !strings.Contains(c, ".") {
 			c = fmt.Sprintf("%s.%s", p.getPackageName(c, structure), c)
 		}
-		composition.WriteLineWithDepth(0, fmt.Sprintf(`%s *-- %s.%s`, c, structure.PackageName, name))
+		composition.WriteLineWithDepth(0, fmt.Sprintf(`"%s" *-- "%s.%s"`, c, structure.PackageName, name))
 	}
 }
 
@@ -336,7 +361,7 @@ func (p *ClassParser) renderAggregations(structure *Struct, name string, aggrega
 			a = fmt.Sprintf("%s.%s", p.getPackageName(a, structure), a)
 		}
 		if p.getPackageName(a, structure) != builtinPackageName {
-			aggregations.WriteLineWithDepth(0, fmt.Sprintf(`%s.%s o-- %s`, structure.PackageName, name, a))
+			aggregations.WriteLineWithDepth(0, fmt.Sprintf(`"%s.%s" o-- "%s"`, structure.PackageName, name, a))
 		}
 	}
 }
@@ -355,7 +380,7 @@ func (p *ClassParser) renderExtends(structure *Struct, name string, extends *Lin
 		if !strings.Contains(c, ".") {
 			c = fmt.Sprintf("%s.%s", structure.PackageName, c)
 		}
-		extends.WriteLineWithDepth(0, fmt.Sprintf(`%s <|-- %s.%s`, c, structure.PackageName, name))
+		extends.WriteLineWithDepth(0, fmt.Sprintf(`"%s" <|-- "%s.%s"`, c, structure.PackageName, name))
 	}
 }
 

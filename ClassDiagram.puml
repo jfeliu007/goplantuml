@@ -1,5 +1,32 @@
 @startuml
 namespace parser {
+    class Struct << (S,Aquamarine) >> {
+        + PackageName string
+        + Functions []*Function
+        + Fields []*Field
+        + Type string
+        + Composition <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+        + Extends <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+        + Aggregations <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+
+        + ImplementsInterface(inter *Struct) bool
+        + AddToComposition(fType string) 
+        + AddToExtends(fType string) 
+        + AddToAggregation(fType string) 
+        + AddField(field *ast.Field, aliases <font color=blue>map</font>[string]string) 
+        + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
+
+    }
+    class Function << (S,Aquamarine) >> {
+        + Name string
+        + Parameters []*Field
+        + ReturnValues []string
+        + PackageName string
+        + FullNameReturnValues []string
+
+        + SignturesAreEqual(function *Function) bool
+
+    }
     class Alias << (S,Aquamarine) >> {
         + Name string
         + PackageName string
@@ -33,6 +60,8 @@ namespace parser {
         - parseImports(impt *ast.ImportSpec) 
         - parseDirectory(directoryPath string) error
         - parseFileDeclarations(node ast.Decl) 
+        - handleFuncDecl(decl *ast.FuncDecl) 
+        - handleGenDecl(decl *ast.GenDecl) 
         - renderStructures(pack string, structures <font color=blue>map</font>[string]*Struct, str *LineStringBuilder) 
         - renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) 
         - renderCompositions(structure *Struct, name string, composition *LineStringBuilder) 
@@ -48,39 +77,12 @@ namespace parser {
         + SetRenderingOptions(ro *RenderingOptions) 
 
     }
-    class Function << (S,Aquamarine) >> {
-        + Name string
-        + Parameters []*Field
-        + ReturnValues []string
-        + PackageName string
-        + FullNameReturnValues []string
-
-        + SignturesAreEqual(function *Function) bool
-
-    }
-    class Struct << (S,Aquamarine) >> {
-        + PackageName string
-        + Functions []*Function
-        + Fields []*Field
-        + Type string
-        + Composition <font color=blue>map</font>[string]<font color=blue>struct</font>{}
-        + Extends <font color=blue>map</font>[string]<font color=blue>struct</font>{}
-        + Aggregations <font color=blue>map</font>[string]<font color=blue>struct</font>{}
-
-        + ImplementsInterface(inter *Struct) bool
-        + AddToComposition(fType string) 
-        + AddToExtends(fType string) 
-        + AddToAggregation(fType string) 
-        + AddField(field *ast.Field, aliases <font color=blue>map</font>[string]string) 
-        + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
-
-    }
 }
-strings.Builder *-- parser.LineStringBuilder
+"strings.Builder" *-- "parser.LineStringBuilder"
 
 
-parser.Function o-- parser.Field
-parser.Struct o-- parser.Function
-parser.Struct o-- parser.Field
+"parser.Struct" o-- "parser.Function"
+"parser.Struct" o-- "parser.Field"
+"parser.Function" o-- "parser.Field"
 
 @enduml

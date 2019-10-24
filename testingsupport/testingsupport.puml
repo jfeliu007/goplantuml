@@ -11,5 +11,5 @@ namespace testingsupport {
 }
 
 
-__builtin__.int #.. testingsupport.myInt
+"__builtin__.int" #.. "testingsupport.myInt"
 @enduml
