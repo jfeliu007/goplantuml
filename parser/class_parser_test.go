@@ -758,3 +758,67 @@ func TestGetBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestRenderingOptions(t *testing.T) {
+	tt := []struct {
+		Name             string
+		RenderingOptions *RenderingOptions
+		InputFolder      string
+		ExpectedResult   string
+	}{
+		{
+			Name:        "Show Fields",
+			InputFolder: "../testingsupport/renderingoptions",
+			RenderingOptions: &RenderingOptions{
+				Fields: true,
+			},
+			ExpectedResult: `@startuml
+namespace renderingoptions {
+    class Test << (S,Aquamarine) >> {
+        - integer int
+
+        - function() 
+
+    }
+}
+
+
+@enduml
+`,
+		}, {
+			Name:        "Hide Fields",
+			InputFolder: "../testingsupport/renderingoptions",
+			RenderingOptions: &RenderingOptions{
+				Fields: false,
+			},
+			ExpectedResult: `@startuml
+namespace renderingoptions {
+    class Test << (S,Aquamarine) >> {
+        - integer int
+
+        - function() 
+
+    }
+}
+
+
+hide fields
+@enduml
+`,
+		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.Name, func(t *testing.T) {
+			parser, err := NewClassDiagram([]string{tc.InputFolder}, []string{}, false)
+			parser.SetRenderingOptions(tc.RenderingOptions)
+			if err != nil {
+				t.Errorf(err.Error())
+				return
+			}
+			result := parser.Render()
+			if result != tc.ExpectedResult {
+				t.Errorf("Expected \n%v\ngot\n%v\n", tc.ExpectedResult, result)
+			}
+		})
+	}
+}

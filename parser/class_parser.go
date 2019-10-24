@@ -44,6 +44,7 @@ func (lsb *LineStringBuilder) WriteLineWithDepth(depth int, str string) {
 //RenderingOptions will allow the class parser to optionally enebale or disable the things to render.
 type RenderingOptions struct {
 	Aggregation bool
+	Fields      bool
 }
 
 //ClassParser contains the structure of the parsed files. The structure is a map of package_names that contains
@@ -62,12 +63,15 @@ type ClassParser struct {
 // files int eh given directory
 func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recursive bool) (*ClassParser, error) {
 	classParser := &ClassParser{
-		renderingOptions: &RenderingOptions{},
-		structure:        make(map[string]map[string]*Struct),
-		allInterfaces:    make(map[string]struct{}),
-		allStructs:       make(map[string]struct{}),
-		allImports:       make(map[string]string),
-		allAliases:       make(map[string]*Alias),
+		renderingOptions: &RenderingOptions{
+			Aggregation: false,
+			Fields:      true,
+		},
+		structure:     make(map[string]map[string]*Struct),
+		allInterfaces: make(map[string]struct{}),
+		allStructs:    make(map[string]struct{}),
+		allImports:    make(map[string]string),
+		allAliases:    make(map[string]*Alias),
 	}
 	ignoreDirectoryMap := map[string]struct{}{}
 	for _, dir := range ignoreDirectories {
@@ -252,7 +256,7 @@ func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 	}
 }
 
-// If this element is an array or a pointer, this funciton will return the type that is closer to these
+// If this element is an array or a pointer, this function will return the type that is closer to these
 // two definitions. For example []***map[int] string will return map[int]string
 func getBasicType(theType ast.Expr) ast.Expr {
 	switch t := theType.(type) {
@@ -280,6 +284,9 @@ func (p *ClassParser) Render() string {
 	}
 	for name, alias := range p.allAliases {
 		renderAlias(name, alias, str)
+	}
+	if !p.renderingOptions.Fields {
+		str.WriteLineWithDepth(0, "hide fields")
 	}
 	str.WriteLineWithDepth(0, "@enduml")
 	return str.String()
