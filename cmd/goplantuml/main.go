@@ -16,6 +16,7 @@ func main() {
 	ignore := flag.String("ignore", "", "comma separated list of folders to ignore")
 	aggregation := flag.Bool("aggregation", false, "renders public aggregations")
 	hideFields := flag.Bool("hide-fields", false, "hides fields")
+	hideMethods := flag.Bool("hide-methods", false, "hides methods")
 	flag.Parse()
 	dirs, err := getDirectories()
 
@@ -36,6 +37,7 @@ func main() {
 	result.SetRenderingOptions(&goplantuml.RenderingOptions{
 		Aggregation: *aggregation,
 		Fields:      !*hideFields,
+		Methods:     !*hideMethods,
 	})
 	if err != nil {
 		fmt.Println(err.Error())

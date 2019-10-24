@@ -770,7 +770,8 @@ func TestRenderingOptions(t *testing.T) {
 			Name:        "Show Fields",
 			InputFolder: "../testingsupport/renderingoptions",
 			RenderingOptions: &RenderingOptions{
-				Fields: true,
+				Fields:  true,
+				Methods: true,
 			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -789,7 +790,8 @@ namespace renderingoptions {
 			Name:        "Hide Fields",
 			InputFolder: "../testingsupport/renderingoptions",
 			RenderingOptions: &RenderingOptions{
-				Fields: false,
+				Fields:  false,
+				Methods: true,
 			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -803,6 +805,48 @@ namespace renderingoptions {
 
 
 hide fields
+@enduml
+`,
+		},
+		{
+			Name:        "Show Methods",
+			InputFolder: "../testingsupport/renderingoptions",
+			RenderingOptions: &RenderingOptions{
+				Fields:  true,
+				Methods: true,
+			},
+			ExpectedResult: `@startuml
+namespace renderingoptions {
+    class Test << (S,Aquamarine) >> {
+        - integer int
+
+        - function() 
+
+    }
+}
+
+
+@enduml
+`,
+		}, {
+			Name:        "Hide Methods",
+			InputFolder: "../testingsupport/renderingoptions",
+			RenderingOptions: &RenderingOptions{
+				Fields:  true,
+				Methods: false,
+			},
+			ExpectedResult: `@startuml
+namespace renderingoptions {
+    class Test << (S,Aquamarine) >> {
+        - integer int
+
+        - function() 
+
+    }
+}
+
+
+hide methods
 @enduml
 `,
 		},

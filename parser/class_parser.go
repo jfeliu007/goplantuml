@@ -45,6 +45,7 @@ func (lsb *LineStringBuilder) WriteLineWithDepth(depth int, str string) {
 type RenderingOptions struct {
 	Aggregation bool
 	Fields      bool
+	Methods     bool
 }
 
 //ClassParser contains the structure of the parsed files. The structure is a map of package_names that contains
@@ -66,6 +67,7 @@ func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recurs
 		renderingOptions: &RenderingOptions{
 			Aggregation: false,
 			Fields:      true,
+			Methods:     true,
 		},
 		structure:     make(map[string]map[string]*Struct),
 		allInterfaces: make(map[string]struct{}),
@@ -287,6 +289,9 @@ func (p *ClassParser) Render() string {
 	}
 	if !p.renderingOptions.Fields {
 		str.WriteLineWithDepth(0, "hide fields")
+	}
+	if !p.renderingOptions.Methods {
+		str.WriteLineWithDepth(0, "hide methods")
 	}
 	str.WriteLineWithDepth(0, "@enduml")
 	return str.String()
