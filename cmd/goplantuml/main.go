@@ -14,9 +14,13 @@ import (
 func main() {
 	recursive := flag.Bool("recursive", false, "walk all directories recursively")
 	ignore := flag.String("ignore", "", "comma separated list of folders to ignore")
-	aggregation := flag.Bool("aggregation", false, "renders public aggregations")
+	showAggregations := flag.Bool("show-aggregation", false, "renders public aggregations")
 	hideFields := flag.Bool("hide-fields", false, "hides fields")
 	hideMethods := flag.Bool("hide-methods", false, "hides methods")
+	hideConnections := flag.Bool("hide-connections", false, "hides all connections in the diagram")
+	showCompositions := flag.Bool("show-compositions", true, "Shows compositions even when -hide-connections is used")
+	showImplementations := flag.Bool("show-implementations", true, "Shows implementations even when -hide-connections is used")
+
 	flag.Parse()
 	dirs, err := getDirectories()
 
@@ -35,9 +39,11 @@ func main() {
 
 	result, err := goplantuml.NewClassDiagram(dirs, ignoredDirectories, *recursive)
 	result.SetRenderingOptions(&goplantuml.RenderingOptions{
-		Aggregation: *aggregation,
-		Fields:      !*hideFields,
-		Methods:     !*hideMethods,
+		Aggregations:    *showAggregations && !*hideConnections,
+		Fields:          !*hideFields,
+		Methods:         !*hideMethods,
+		Compositions:    *showCompositions && !*hideConnections,
+		Implementations: *showImplementations && !*hideConnections,
 	})
 	if err != nil {
 		fmt.Println(err.Error())
