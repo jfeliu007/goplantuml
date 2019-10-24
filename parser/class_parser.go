@@ -43,9 +43,12 @@ func (lsb *LineStringBuilder) WriteLineWithDepth(depth int, str string) {
 
 //RenderingOptions will allow the class parser to optionally enebale or disable the things to render.
 type RenderingOptions struct {
-	Aggregation bool
-	Fields      bool
-	Methods     bool
+	Aggregations    bool
+	Fields          bool
+	Methods         bool
+	Compositions    bool
+	Implementations bool
+	Aliases         bool
 }
 
 //ClassParser contains the structure of the parsed files. The structure is a map of package_names that contains
@@ -65,9 +68,12 @@ type ClassParser struct {
 func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recursive bool) (*ClassParser, error) {
 	classParser := &ClassParser{
 		renderingOptions: &RenderingOptions{
-			Aggregation: false,
-			Fields:      true,
-			Methods:     true,
+			Aggregations:    false,
+			Fields:          true,
+			Methods:         true,
+			Compositions:    true,
+			Implementations: true,
+			Aliases:         true,
 		},
 		structure:     make(map[string]map[string]*Struct),
 		allInterfaces: make(map[string]struct{}),
@@ -284,9 +290,6 @@ func (p *ClassParser) Render() string {
 		p.renderStructures(pack, structures, str)
 
 	}
-	for name, alias := range p.allAliases {
-		renderAlias(name, alias, str)
-	}
 	if !p.renderingOptions.Fields {
 		str.WriteLineWithDepth(0, "hide fields")
 	}
@@ -307,10 +310,19 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 			p.renderStructure(structure, pack, name, str, composition, extends, aggregations)
 		}
 		str.WriteLineWithDepth(0, fmt.Sprintf(`}`))
-		str.WriteLineWithDepth(0, composition.String())
-		str.WriteLineWithDepth(0, extends.String())
-		if p.renderingOptions.Aggregation {
+		if p.renderingOptions.Compositions {
+			str.WriteLineWithDepth(0, composition.String())
+		}
+		if p.renderingOptions.Implementations {
+			str.WriteLineWithDepth(0, extends.String())
+		}
+		if p.renderingOptions.Aggregations {
 			str.WriteLineWithDepth(0, aggregations.String())
+		}
+		if p.renderingOptions.Aliases {
+			for name, alias := range p.allAliases {
+				renderAlias(name, alias, str)
+			}
 		}
 	}
 }

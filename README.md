@@ -32,7 +32,23 @@ goplantuml [-recursive] path/to/gofiles path/to/gofiles2
 goplantuml [-recursive] path/to/gofiles path/to/gofiles2 > diagram_file_name.puml
 ```
 ```
-goplantuml [-recursive] [-aggregation] [-ignore="path/to/ignored/folder1,path/to/ignore/folder2"] path/to/gofiles > diagram_file_name.puml
+Usage of goplantuml:
+  -hide-connections
+    	hides all connections in the diagram
+  -hide-fields
+    	hides fields
+  -hide-methods
+    	hides methods
+  -ignore string
+    	comma separated list of folders to ignore
+  -recursive
+    	walk all directories recursively
+  -show-aggregation
+    	renders public aggregations
+  -show-compositions
+    	Shows compositions even when -hide-connections is used (default true)
+  -show-implementations
+    	Shows implementations even when -hide-connections is used (default true)
 ```
 
 #### Example

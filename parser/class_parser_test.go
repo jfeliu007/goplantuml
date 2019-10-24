@@ -199,7 +199,12 @@ func TestRenderStructures(t *testing.T) {
 	lineB = &LineStringBuilder{}
 	parser = getEmptyParser("main")
 	parser.SetRenderingOptions(&RenderingOptions{
-		Aggregation: true,
+		Aggregations:    true,
+		Fields:          true,
+		Methods:         true,
+		Compositions:    true,
+		Implementations: true,
+		Aliases:         true,
 	})
 	parser.renderStructures("main", structMap, lineB)
 	expectedResult = "namespace main {\n    class MainClass << (S,Aquamarine) >> {\n        - privateField int\n\n        + PublicField error\n\n        - foo( int,  string) (error, int)\n\n        + Boo( string,  int) int\n\n    }\n}\n\"foopack.AnotherClass\" *-- \"main.MainClass\"\n\n\"main.NewClass\" <|-- \"main.MainClass\"\n\n\"main.MainClass\" o-- \"main.File\"\n\n"
@@ -401,7 +406,14 @@ func TestRenderStructMethods(t *testing.T) {
 
 func getEmptyParser(packageName string) *ClassParser {
 	result := &ClassParser{
-		renderingOptions:   &RenderingOptions{},
+		renderingOptions: &RenderingOptions{
+			Aggregations:    false,
+			Fields:          true,
+			Methods:         true,
+			Compositions:    true,
+			Implementations: true,
+			Aliases:         true,
+		},
 		currentPackageName: packageName,
 		structure:          make(map[string]map[string]*Struct),
 		allInterfaces:      make(map[string]struct{}),
@@ -607,7 +619,7 @@ func TestRenderAggregations(t *testing.T) {
 			"File": {},
 		},
 	}
-	parser.renderingOptions.Aggregation = true
+	parser.renderingOptions.Aggregations = true
 	aggregationsBuilder := &LineStringBuilder{}
 	parser.renderAggregations(st, "TestClass", aggregationsBuilder)
 	expectedResult := "\"main.TestClass\" o-- \"main.File\"\n"
@@ -624,7 +636,7 @@ func TestRenderAggregations(t *testing.T) {
 			},
 		},
 	}
-	parser.renderingOptions.Aggregation = true
+	parser.renderingOptions.Aggregations = true
 	aggregationsBuilder = &LineStringBuilder{}
 	parser.renderAggregations(st, "TestClass", aggregationsBuilder)
 	expectedResult = ""
@@ -635,12 +647,19 @@ func TestRenderAggregations(t *testing.T) {
 
 func TestSetRenderingOptions(t *testing.T) {
 	parser := getEmptyParser("main")
-	emptyRenderingOptions := &RenderingOptions{}
+	emptyRenderingOptions := &RenderingOptions{
+		Aggregations:    false,
+		Fields:          true,
+		Methods:         true,
+		Compositions:    true,
+		Implementations: true,
+		Aliases:         true,
+	}
 	if !reflect.DeepEqual(parser.renderingOptions, emptyRenderingOptions) {
 		t.Errorf("TestRenderingOptions: expected renderingOptions to be %v got %v", emptyRenderingOptions, parser.renderingOptions)
 	}
 	newRenderingOptions := &RenderingOptions{
-		Aggregation: true,
+		Aggregations: true,
 	}
 	parser.SetRenderingOptions(newRenderingOptions)
 	if !reflect.DeepEqual(parser.renderingOptions, newRenderingOptions) {
@@ -770,8 +789,12 @@ func TestRenderingOptions(t *testing.T) {
 			Name:        "Show Fields",
 			InputFolder: "../testingsupport/renderingoptions",
 			RenderingOptions: &RenderingOptions{
-				Fields:  true,
-				Methods: true,
+				Aggregations:    false,
+				Fields:          true,
+				Methods:         true,
+				Compositions:    true,
+				Implementations: true,
+				Aliases:         true,
 			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -790,8 +813,12 @@ namespace renderingoptions {
 			Name:        "Hide Fields",
 			InputFolder: "../testingsupport/renderingoptions",
 			RenderingOptions: &RenderingOptions{
-				Fields:  false,
-				Methods: true,
+				Aggregations:    false,
+				Fields:          false,
+				Methods:         true,
+				Compositions:    true,
+				Implementations: true,
+				Aliases:         true,
 			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -812,8 +839,12 @@ hide fields
 			Name:        "Show Methods",
 			InputFolder: "../testingsupport/renderingoptions",
 			RenderingOptions: &RenderingOptions{
-				Fields:  true,
-				Methods: true,
+				Aggregations:    false,
+				Fields:          true,
+				Methods:         true,
+				Compositions:    true,
+				Implementations: true,
+				Aliases:         true,
 			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -832,8 +863,12 @@ namespace renderingoptions {
 			Name:        "Hide Methods",
 			InputFolder: "../testingsupport/renderingoptions",
 			RenderingOptions: &RenderingOptions{
-				Fields:  true,
-				Methods: false,
+				Aggregations:    false,
+				Fields:          true,
+				Methods:         false,
+				Compositions:    true,
+				Implementations: true,
+				Aliases:         true,
 			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
