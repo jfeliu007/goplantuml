@@ -204,7 +204,10 @@ func (p *ClassParser) handleFuncDecl(decl *ast.FuncDecl) {
 }
 
 func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
-
+	if decl.Specs == nil || len(decl.Specs) < 1 {
+		//This might be a type of General Declaration we do not know how to handle.
+		return
+	}
 	spec := decl.Specs[0]
 	var typeName string
 	var alias *Alias
