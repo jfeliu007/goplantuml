@@ -20,6 +20,7 @@ func main() {
 	hideConnections := flag.Bool("hide-connections", false, "hides all connections in the diagram")
 	showCompositions := flag.Bool("show-compositions", true, "Shows compositions even when -hide-connections is used")
 	showImplementations := flag.Bool("show-implementations", true, "Shows implementations even when -hide-connections is used")
+	showAliases := flag.Bool("show-aliases", true, "Shows aliases even when -hide-connections is used")
 
 	flag.Parse()
 	dirs, err := getDirectories()
@@ -44,6 +45,7 @@ func main() {
 		Methods:         !*hideMethods,
 		Compositions:    *showCompositions && !*hideConnections,
 		Implementations: *showImplementations && !*hideConnections,
+		Aliases:         *showAliases && !*hideConnections,
 	})
 	if err != nil {
 		fmt.Println(err.Error())
