@@ -203,6 +203,28 @@ func (p *ClassParser) handleFuncDecl(decl *ast.FuncDecl) {
 	}
 }
 
+func handleGenDecStructType(p *ClassParser, typeName string, c *ast.StructType) {
+	for _, f := range c.Fields.List {
+		p.getOrCreateStruct(typeName).AddField(f, p.allImports)
+	}
+}
+
+func handleGenDecInterfaceType(p *ClassParser, typeName string, c *ast.InterfaceType) {
+	for _, f := range c.Methods.List {
+		switch t := f.Type.(type) {
+		case *ast.FuncType:
+			p.getOrCreateStruct(typeName).AddMethod(f, p.allImports)
+			break
+		case *ast.Ident:
+			f, _ := getFieldType(t, p.allImports)
+			st := p.getOrCreateStruct(typeName)
+			f = replacePackageConstant(f, st.PackageName)
+			st.AddToComposition(f)
+			break
+		}
+	}
+}
+
 func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 	if decl.Specs == nil || len(decl.Specs) < 1 {
 		//This might be a type of General Declaration we do not know how to handle.
@@ -218,24 +240,10 @@ func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 		switch c := v.Type.(type) {
 		case *ast.StructType:
 			declarationType = "class"
-			for _, f := range c.Fields.List {
-				p.getOrCreateStruct(typeName).AddField(f, p.allImports)
-			}
+			handleGenDecStructType(p, typeName, c)
 		case *ast.InterfaceType:
 			declarationType = "interface"
-			for _, f := range c.Methods.List {
-				switch t := f.Type.(type) {
-				case *ast.FuncType:
-					p.getOrCreateStruct(typeName).AddMethod(f, p.allImports)
-					break
-				case *ast.Ident:
-					f, _ := getFieldType(t, p.allImports)
-					st := p.getOrCreateStruct(typeName)
-					f = replacePackageConstant(f, st.PackageName)
-					st.AddToComposition(f)
-					break
-				}
-			}
+			handleGenDecInterfaceType(p, typeName, c)
 		default:
 			basicType, _ := getFieldType(getBasicType(c), p.allImports)
 
