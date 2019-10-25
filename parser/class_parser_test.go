@@ -901,3 +901,16 @@ hide methods
 		})
 	}
 }
+
+func TestHandleGenDecl(t *testing.T) {
+	parser := getEmptyParser("main")
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("TestHandleGenDecl: Expected no panic in this function when the Specs are empty or nil.")
+		}
+	}()
+	parser.handleGenDecl(&ast.GenDecl{})
+	parser.handleGenDecl(&ast.GenDecl{
+		Specs: []ast.Spec{},
+	})
+}
