@@ -21,6 +21,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"unicode"
 )
@@ -297,13 +298,27 @@ func getBasicType(theType ast.Expr) ast.Expr {
 func (p *ClassParser) Render() string {
 	str := &LineStringBuilder{}
 	str.WriteLineWithDepth(0, "@startuml")
-	for pack, structures := range p.structure {
+
+	var packages []string
+	for pack := range p.structure {
+		packages = append(packages, pack)
+	}
+	sort.Strings(packages)
+	for _, pack := range packages {
+		structures := p.structure[pack]
 		p.renderStructures(pack, structures, str)
 
 	}
 	if p.renderingOptions.Aliases {
-		for name, alias := range p.allAliases {
-			renderAlias(name, alias, str)
+
+		var aliases []string
+		for a := range p.allAliases {
+			aliases = append(aliases, a)
+		}
+		sort.Strings(aliases)
+		for _, a := range aliases {
+			alias := p.allAliases[a]
+			renderAlias(alias, str)
 		}
 	}
 	if !p.renderingOptions.Fields {
@@ -322,7 +337,16 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 		extends := &LineStringBuilder{}
 		aggregations := &LineStringBuilder{}
 		str.WriteLineWithDepth(0, fmt.Sprintf(`namespace %s {`, pack))
-		for name, structure := range structures {
+
+		names := []string{}
+		for name := range structures {
+			names = append(names, name)
+		}
+
+		sort.Strings(names)
+
+		for _, name := range names {
+			structure := structures[name]
 			p.renderStructure(structure, pack, name, str, composition, extends, aggregations)
 		}
 		str.WriteLineWithDepth(0, fmt.Sprintf(`}`))
@@ -338,7 +362,7 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 	}
 }
 
-func renderAlias(name string, alias *Alias, str *LineStringBuilder) {
+func renderAlias(alias *Alias, str *LineStringBuilder) {
 	str.WriteLineWithDepth(0, fmt.Sprintf(`"%s" #.. "%s"`, alias.Name, alias.AliasOf))
 }
 
@@ -380,8 +404,13 @@ func (p *ClassParser) renderStructure(structure *Struct, pack string, name strin
 }
 
 func (p *ClassParser) renderCompositions(structure *Struct, name string, composition *LineStringBuilder) {
+	orderedCompositions := []string{}
 
 	for c := range structure.Composition {
+		orderedCompositions = append(orderedCompositions, c)
+	}
+	sort.Strings(orderedCompositions)
+	for _, c := range orderedCompositions {
 		if !strings.Contains(c, ".") {
 			c = fmt.Sprintf("%s.%s", p.getPackageName(c, structure), c)
 		}
@@ -391,7 +420,15 @@ func (p *ClassParser) renderCompositions(structure *Struct, name string, composi
 
 func (p *ClassParser) renderAggregations(structure *Struct, name string, aggregations *LineStringBuilder) {
 
+	orderedAggregations := []string{}
+
 	for a := range structure.Aggregations {
+		orderedAggregations = append(orderedAggregations, a)
+	}
+
+	sort.Strings(orderedAggregations)
+
+	for _, a := range orderedAggregations {
 		if !strings.Contains(a, ".") {
 			a = fmt.Sprintf("%s.%s", p.getPackageName(a, structure), a)
 		}
@@ -411,7 +448,12 @@ func (p *ClassParser) getPackageName(t string, st *Struct) string {
 }
 func (p *ClassParser) renderExtends(structure *Struct, name string, extends *LineStringBuilder) {
 
+	orderedExtends := []string{}
 	for c := range structure.Extends {
+		orderedExtends = append(orderedExtends, c)
+	}
+	sort.Strings(orderedExtends)
+	for _, c := range orderedExtends {
 		if !strings.Contains(c, ".") {
 			c = fmt.Sprintf("%s.%s", structure.PackageName, c)
 		}

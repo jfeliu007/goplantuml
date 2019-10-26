@@ -549,9 +549,8 @@ func TestRender(t *testing.T) {
 	if err != nil {
 		t.Errorf("TestRender: expected no errors reading testing file, got %s", err.Error())
 	}
-	resultAlt, err := ioutil.ReadFile("../testingsupport/testingsupport alt.puml")
-	if string(result) != resultRender && string(resultAlt) != resultRender {
-		t.Errorf("TestRender: Expected renders to be the same as %s or %s, but got %s", result, resultAlt, resultRender)
+	if string(result) != resultRender {
+		t.Errorf("TestRender: Expected renders to be the same as %s , but got %s", result, resultRender)
 	}
 }
 
@@ -579,9 +578,8 @@ func TestMultipleFolders(t *testing.T) {
 	if err != nil {
 		t.Errorf("TestMultipleFolders: expected no errors reading testing file, got %s", err.Error())
 	}
-	resultAlt, err := ioutil.ReadFile("../testingsupport/subfolder1-2alt.puml")
-	if string(result) != resultRender && string(resultAlt) != resultRender {
-		t.Errorf("TestMultipleFolders: Expected renders to be the same as %s or %s, but got %s", result, resultAlt, resultRender)
+	if string(result) != resultRender {
+		t.Errorf("TestMultipleFolders: Expected renders to be the same as %s , but got %s", result, resultRender)
 	}
 }
 
