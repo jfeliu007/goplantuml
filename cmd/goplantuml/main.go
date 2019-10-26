@@ -14,7 +14,7 @@ import (
 func main() {
 	recursive := flag.Bool("recursive", false, "walk all directories recursively")
 	ignore := flag.String("ignore", "", "comma separated list of folders to ignore")
-	showAggregations := flag.Bool("show-aggregation", false, "renders public aggregations")
+	showAggregations := flag.Bool("show-aggregations", false, "renders public aggregations")
 	hideFields := flag.Bool("hide-fields", false, "hides fields")
 	hideMethods := flag.Bool("hide-methods", false, "hides methods")
 	hideConnections := flag.Bool("hide-connections", false, "hides all connections in the diagram")
