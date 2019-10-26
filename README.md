@@ -43,8 +43,10 @@ Usage of goplantuml:
     	comma separated list of folders to ignore
   -recursive
     	walk all directories recursively
-  -show-aggregation
+  -show-aggregations
     	renders public aggregations
+  -show-aliases
+    	Shows aliases even when -hide-connections is used (default true)
   -show-compositions
     	Shows compositions even when -hide-connections is used (default true)
   -show-implementations
