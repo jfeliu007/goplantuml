@@ -1,12 +1,4 @@
 @startuml
-namespace subfolder3 {
-    interface SubfolderInterface  {
-        + SubfolderFunction() bool
-
-    }
-}
-
-
 namespace subfolder2 {
     class Subfolder2 << (S,Aquamarine) >> {
         + SubfolderFunction() bool
@@ -15,5 +7,13 @@ namespace subfolder2 {
 }
 
 "subfolder3.SubfolderInterface" <|-- "subfolder2.Subfolder2"
+
+namespace subfolder3 {
+    interface SubfolderInterface  {
+        + SubfolderFunction() bool
+
+    }
+}
+
 
 @enduml

@@ -1,0 +1,2 @@
+#!/bin/bash
+go install ./... && goplantuml -show-aggregations -recursive -ignore="./testingsupport/"  ./parser > ClassDiagram.puml
