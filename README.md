@@ -34,23 +34,25 @@ goplantuml [-recursive] path/to/gofiles path/to/gofiles2 > diagram_file_name.pum
 ```
 Usage of goplantuml:
   -hide-connections
-    	hides all connections in the diagram
+        hides all connections in the diagram
   -hide-fields
-    	hides fields
+        hides fields
   -hide-methods
-    	hides methods
+        hides methods
   -ignore string
-    	comma separated list of folders to ignore
+        comma separated list of folders to ignore
   -recursive
-    	walk all directories recursively
+        walk all directories recursively
   -show-aggregations
-    	renders public aggregations
+        renders public aggregations even when -hide-connections is used (do not render by default)
   -show-aliases
-    	Shows aliases even when -hide-connections is used (default true)
+        Shows aliases even when -hide-connections is used
   -show-compositions
-    	Shows compositions even when -hide-connections is used (default true)
+        Shows compositions even when -hide-connections is used
+  -show-connection-labels
+        Shows labels in the connections to identify the connections types (e.g. extends, implements, aggregates, alias of
   -show-implementations
-    	Shows implementations even when -hide-connections is used (default true)
+        Shows implementations even when -hide-connections is used
 ```
 
 #### Example

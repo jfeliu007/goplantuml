@@ -14,13 +14,14 @@ import (
 func main() {
 	recursive := flag.Bool("recursive", false, "walk all directories recursively")
 	ignore := flag.String("ignore", "", "comma separated list of folders to ignore")
-	showAggregations := flag.Bool("show-aggregations", false, "renders public aggregations")
+	showAggregations := flag.Bool("show-aggregations", false, "renders public aggregations even when -hide-connections is used (do not render by default)")
 	hideFields := flag.Bool("hide-fields", false, "hides fields")
 	hideMethods := flag.Bool("hide-methods", false, "hides methods")
 	hideConnections := flag.Bool("hide-connections", false, "hides all connections in the diagram")
-	showCompositions := flag.Bool("show-compositions", true, "Shows compositions even when -hide-connections is used")
-	showImplementations := flag.Bool("show-implementations", true, "Shows implementations even when -hide-connections is used")
-	showAliases := flag.Bool("show-aliases", true, "Shows aliases even when -hide-connections is used")
+	showCompositions := flag.Bool("show-compositions", false, "Shows compositions even when -hide-connections is used")
+	showImplementations := flag.Bool("show-implementations", false, "Shows implementations even when -hide-connections is used")
+	showAliases := flag.Bool("show-aliases", false, "Shows aliases even when -hide-connections is used")
+	showConnectionLabels := flag.Bool("show-connection-labels", false, "Shows labels in the connections to identify the connections types (e.g. extends, implements, aggregates, alias of")
 
 	flag.Parse()
 	dirs, err := getDirectories()
@@ -37,16 +38,21 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+	renderingOptions := map[goplantuml.RenderingOption]bool{
+		goplantuml.RenderConnectionLabels: *showConnectionLabels,
+		goplantuml.RenderFields:           !*hideFields,
+		goplantuml.RenderMethods:          !*hideMethods,
+		goplantuml.RenderAggregations:     *showAggregations,
+	}
+	if *hideConnections {
+		renderingOptions[goplantuml.RenderAliases] = *showAliases
+		renderingOptions[goplantuml.RenderCompositions] = *showCompositions
+		renderingOptions[goplantuml.RenderImplementations] = *showImplementations
+
+	}
 
 	result, err := goplantuml.NewClassDiagram(dirs, ignoredDirectories, *recursive)
-	result.SetRenderingOptions(&goplantuml.RenderingOptions{
-		Aggregations:    *showAggregations && !*hideConnections,
-		Fields:          !*hideFields,
-		Methods:         !*hideMethods,
-		Compositions:    *showCompositions && !*hideConnections,
-		Implementations: *showImplementations && !*hideConnections,
-		Aliases:         *showAliases && !*hideConnections,
-	})
+	result.SetRenderingOptions(renderingOptions)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

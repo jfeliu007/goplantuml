@@ -34,6 +34,10 @@ type LineStringBuilder struct {
 
 const tab = "    "
 const builtinPackageName = "__builtin__"
+const implements = `"implements"`
+const extends = `"extends"`
+const aggregates = `"uses"`
+const aliasOf = `"alias of"`
 
 //WriteLineWithDepth will write the given text with added tabs at the beginning into the string builder.
 func (lsb *LineStringBuilder) WriteLineWithDepth(depth int, str string) {
@@ -44,13 +48,38 @@ func (lsb *LineStringBuilder) WriteLineWithDepth(depth int, str string) {
 
 //RenderingOptions will allow the class parser to optionally enebale or disable the things to render.
 type RenderingOptions struct {
-	Aggregations    bool
-	Fields          bool
-	Methods         bool
-	Compositions    bool
-	Implementations bool
-	Aliases         bool
+	Aggregations     bool
+	Fields           bool
+	Methods          bool
+	Compositions     bool
+	Implementations  bool
+	Aliases          bool
+	ConnectionLabels bool
 }
+
+//RenderAggregations is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render aggregations
+const RenderAggregations = 0
+
+//RenderCompositions is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render compositions
+const RenderCompositions = 1
+
+//RenderImplementations is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render implementations
+const RenderImplementations = 2
+
+//RenderAliases is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render aliases
+const RenderAliases = 3
+
+//RenderFields is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render fields
+const RenderFields = 4
+
+//RenderMethods is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render methods
+const RenderMethods = 5
+
+//RenderConnectionLabels is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render the connection labels
+const RenderConnectionLabels = 6
+
+//RenderingOption is an alias for an it so it is easier to use it as options in a map (see SetRenderingOptions(map[RenderingOption]bool) error)
+type RenderingOption int
 
 //ClassParser contains the structure of the parsed files. The structure is a map of package_names that contains
 //a map of structure_names -> Structs
@@ -69,12 +98,13 @@ type ClassParser struct {
 func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recursive bool) (*ClassParser, error) {
 	classParser := &ClassParser{
 		renderingOptions: &RenderingOptions{
-			Aggregations:    false,
-			Fields:          true,
-			Methods:         true,
-			Compositions:    true,
-			Implementations: true,
-			Aliases:         true,
+			Aggregations:     false,
+			Fields:           true,
+			Methods:          true,
+			Compositions:     true,
+			Implementations:  true,
+			Aliases:          true,
+			ConnectionLabels: false,
 		},
 		structure:     make(map[string]map[string]*Struct),
 		allInterfaces: make(map[string]struct{}),
@@ -310,16 +340,7 @@ func (p *ClassParser) Render() string {
 
 	}
 	if p.renderingOptions.Aliases {
-
-		var aliases []string
-		for a := range p.allAliases {
-			aliases = append(aliases, a)
-		}
-		sort.Strings(aliases)
-		for _, a := range aliases {
-			alias := p.allAliases[a]
-			renderAlias(alias, str)
-		}
+		p.renderAliases(str)
 	}
 	if !p.renderingOptions.Fields {
 		str.WriteLineWithDepth(0, "hide fields")
@@ -362,8 +383,20 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 	}
 }
 
-func renderAlias(alias *Alias, str *LineStringBuilder) {
-	str.WriteLineWithDepth(0, fmt.Sprintf(`"%s" #.. "%s"`, alias.Name, alias.AliasOf))
+func (p *ClassParser) renderAliases(str *LineStringBuilder) {
+
+	aliasString := ""
+	if p.renderingOptions.ConnectionLabels {
+		aliasString = aliasOf
+	}
+	orderedAliases := []string{}
+	for name := range p.allAliases {
+		orderedAliases = append(orderedAliases, name)
+	}
+	for _, name := range orderedAliases {
+		alias := p.allAliases[name]
+		str.WriteLineWithDepth(0, fmt.Sprintf(`"%s" #.. %s"%s"`, alias.Name, aliasString, alias.AliasOf))
+	}
 }
 
 func (p *ClassParser) renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) {
@@ -414,7 +447,11 @@ func (p *ClassParser) renderCompositions(structure *Struct, name string, composi
 		if !strings.Contains(c, ".") {
 			c = fmt.Sprintf("%s.%s", p.getPackageName(c, structure), c)
 		}
-		composition.WriteLineWithDepth(0, fmt.Sprintf(`"%s" *-- "%s.%s"`, c, structure.PackageName, name))
+		composedString := ""
+		if p.renderingOptions.ConnectionLabels {
+			composedString = extends
+		}
+		composition.WriteLineWithDepth(0, fmt.Sprintf(`"%s" *-- %s"%s.%s"`, c, composedString, structure.PackageName, name))
 	}
 }
 
@@ -432,8 +469,12 @@ func (p *ClassParser) renderAggregations(structure *Struct, name string, aggrega
 		if !strings.Contains(a, ".") {
 			a = fmt.Sprintf("%s.%s", p.getPackageName(a, structure), a)
 		}
+		aggregationString := ""
+		if p.renderingOptions.ConnectionLabels {
+			aggregationString = aggregates
+		}
 		if p.getPackageName(a, structure) != builtinPackageName {
-			aggregations.WriteLineWithDepth(0, fmt.Sprintf(`"%s.%s" o-- "%s"`, structure.PackageName, name, a))
+			aggregations.WriteLineWithDepth(0, fmt.Sprintf(`"%s.%s"%s o-- "%s"`, structure.PackageName, name, aggregationString, a))
 		}
 	}
 }
@@ -457,7 +498,11 @@ func (p *ClassParser) renderExtends(structure *Struct, name string, extends *Lin
 		if !strings.Contains(c, ".") {
 			c = fmt.Sprintf("%s.%s", structure.PackageName, c)
 		}
-		extends.WriteLineWithDepth(0, fmt.Sprintf(`"%s" <|-- "%s.%s"`, c, structure.PackageName, name))
+		implementString := ""
+		if p.renderingOptions.ConnectionLabels {
+			implementString = implements
+		}
+		extends.WriteLineWithDepth(0, fmt.Sprintf(`"%s" <|-- %s"%s.%s"`, c, implementString, structure.PackageName, name))
 	}
 }
 
@@ -531,6 +576,27 @@ func (p *ClassParser) getStruct(structName string) *Struct {
 }
 
 //SetRenderingOptions Sets the rendering options for the Render() Function
-func (p *ClassParser) SetRenderingOptions(ro *RenderingOptions) {
-	p.renderingOptions = ro
+func (p *ClassParser) SetRenderingOptions(ro map[RenderingOption]bool) error {
+	for option, val := range ro {
+		switch option {
+		case RenderAggregations:
+			p.renderingOptions.Aggregations = val
+		case RenderAliases:
+			p.renderingOptions.Aliases = val
+		case RenderCompositions:
+			p.renderingOptions.Compositions = val
+		case RenderFields:
+			p.renderingOptions.Fields = val
+		case RenderImplementations:
+			p.renderingOptions.Implementations = val
+		case RenderMethods:
+			p.renderingOptions.Methods = val
+		case RenderConnectionLabels:
+			p.renderingOptions.ConnectionLabels = val
+		default:
+			return fmt.Errorf("Invalid Rendering option %v", option)
+		}
+
+	}
+	return nil
 }
