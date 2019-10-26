@@ -22,6 +22,7 @@ namespace parser {
         - handleFuncDecl(decl *ast.FuncDecl) 
         - handleGenDecl(decl *ast.GenDecl) 
         - renderStructures(pack string, structures <font color=blue>map</font>[string]*Struct, str *LineStringBuilder) 
+        - renderAliases(str *LineStringBuilder) 
         - renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) 
         - renderCompositions(structure *Struct, name string, composition *LineStringBuilder) 
         - renderAggregations(structure *Struct, name string, aggregations *LineStringBuilder) 
@@ -33,7 +34,7 @@ namespace parser {
         - getStruct(structName string) *Struct
 
         + Render() string
-        + SetRenderingOptions(ro *RenderingOptions) 
+        + SetRenderingOptions(ro <font color=blue>map</font>[RenderingOption]bool) error
 
     }
     class Field << (S,Aquamarine) >> {
@@ -63,6 +64,7 @@ namespace parser {
         + Compositions bool
         + Implementations bool
         + Aliases bool
+        + ConnectionLabels bool
 
     }
     class Struct << (S,Aquamarine) >> {
@@ -82,12 +84,15 @@ namespace parser {
         + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
 
     }
+    class parser.RenderingOption << (T, #FF7700) >>  {
+    }
 }
-"strings.Builder" *-- "parser.LineStringBuilder"
+"strings.Builder" *-- "extends""parser.LineStringBuilder"
 
 
-"parser.Function" o-- "parser.Field"
-"parser.Struct" o-- "parser.Field"
-"parser.Struct" o-- "parser.Function"
+"parser.Function""uses" o-- "parser.Field"
+"parser.Struct""uses" o-- "parser.Field"
+"parser.Struct""uses" o-- "parser.Function"
 
+"__builtin__.int" #.. "alias of""parser.RenderingOption"
 @enduml

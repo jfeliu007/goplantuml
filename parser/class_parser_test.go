@@ -198,13 +198,8 @@ func TestRenderStructures(t *testing.T) {
 	}
 	lineB = &LineStringBuilder{}
 	parser = getEmptyParser("main")
-	parser.SetRenderingOptions(&RenderingOptions{
-		Aggregations:    true,
-		Fields:          true,
-		Methods:         true,
-		Compositions:    true,
-		Implementations: true,
-		Aliases:         true,
+	parser.SetRenderingOptions(map[RenderingOption]bool{
+		RenderAggregations: true,
 	})
 	parser.renderStructures("main", structMap, lineB)
 	expectedResult = "namespace main {\n    class MainClass << (S,Aquamarine) >> {\n        - privateField int\n\n        + PublicField error\n\n        - foo( int,  string) (error, int)\n\n        + Boo( string,  int) int\n\n    }\n}\n\"foopack.AnotherClass\" *-- \"main.MainClass\"\n\n\"main.NewClass\" <|-- \"main.MainClass\"\n\n\"main.MainClass\" o-- \"main.File\"\n\n"
@@ -657,11 +652,32 @@ func TestSetRenderingOptions(t *testing.T) {
 		t.Errorf("TestRenderingOptions: expected renderingOptions to be %v got %v", emptyRenderingOptions, parser.renderingOptions)
 	}
 	newRenderingOptions := &RenderingOptions{
-		Aggregations: true,
+		Aggregations:     true,
+		Implementations:  false,
+		Compositions:     true,
+		Methods:          false,
+		Fields:           true,
+		Aliases:          false,
+		ConnectionLabels: true,
 	}
-	parser.SetRenderingOptions(newRenderingOptions)
+	parser.SetRenderingOptions(map[RenderingOption]bool{
+		RenderAggregations:     true,
+		RenderImplementations:  false,
+		RenderCompositions:     true,
+		RenderMethods:          false,
+		RenderFields:           true,
+		RenderAliases:          false,
+		RenderConnectionLabels: true,
+	})
 	if !reflect.DeepEqual(parser.renderingOptions, newRenderingOptions) {
 		t.Errorf("TestRenderingOptions: expected renderingOptions to be %v got %v", newRenderingOptions, parser.renderingOptions)
+	}
+
+	err := parser.SetRenderingOptions(map[RenderingOption]bool{
+		-1: true,
+	})
+	if err == nil {
+		t.Errorf("TestSetRenderingOptions: expected error got nil")
 	}
 }
 
@@ -779,21 +795,14 @@ func TestGetBasic(t *testing.T) {
 func TestRenderingOptions(t *testing.T) {
 	tt := []struct {
 		Name             string
-		RenderingOptions *RenderingOptions
+		RenderingOptions map[RenderingOption]bool
 		InputFolder      string
 		ExpectedResult   string
 	}{
 		{
-			Name:        "Show Fields",
-			InputFolder: "../testingsupport/renderingoptions",
-			RenderingOptions: &RenderingOptions{
-				Aggregations:    false,
-				Fields:          true,
-				Methods:         true,
-				Compositions:    true,
-				Implementations: true,
-				Aliases:         true,
-			},
+			Name:             "Show Fields",
+			InputFolder:      "../testingsupport/renderingoptions",
+			RenderingOptions: map[RenderingOption]bool{},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
     class Test << (S,Aquamarine) >> {
@@ -810,13 +819,8 @@ namespace renderingoptions {
 		}, {
 			Name:        "Hide Fields",
 			InputFolder: "../testingsupport/renderingoptions",
-			RenderingOptions: &RenderingOptions{
-				Aggregations:    false,
-				Fields:          false,
-				Methods:         true,
-				Compositions:    true,
-				Implementations: true,
-				Aliases:         true,
+			RenderingOptions: map[RenderingOption]bool{
+				RenderFields: false,
 			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -834,16 +838,9 @@ hide fields
 `,
 		},
 		{
-			Name:        "Show Methods",
-			InputFolder: "../testingsupport/renderingoptions",
-			RenderingOptions: &RenderingOptions{
-				Aggregations:    false,
-				Fields:          true,
-				Methods:         true,
-				Compositions:    true,
-				Implementations: true,
-				Aliases:         true,
-			},
+			Name:             "Show Methods",
+			InputFolder:      "../testingsupport/renderingoptions",
+			RenderingOptions: map[RenderingOption]bool{},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
     class Test << (S,Aquamarine) >> {
@@ -860,13 +857,8 @@ namespace renderingoptions {
 		}, {
 			Name:        "Hide Methods",
 			InputFolder: "../testingsupport/renderingoptions",
-			RenderingOptions: &RenderingOptions{
-				Aggregations:    false,
-				Fields:          true,
-				Methods:         false,
-				Compositions:    true,
-				Implementations: true,
-				Aliases:         true,
+			RenderingOptions: map[RenderingOption]bool{
+				RenderMethods: false,
 			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -911,4 +903,45 @@ func TestHandleGenDecl(t *testing.T) {
 	parser.handleGenDecl(&ast.GenDecl{
 		Specs: []ast.Spec{},
 	})
+}
+
+func TestConnectionLabelsRendering(t *testing.T) {
+	parser, err := NewClassDiagram([]string{"../testingsupport/connectionlabels"}, []string{}, false)
+	if err != nil {
+		t.Errorf("TestConnectionLabelsRendering: expected no error but got %s", err.Error())
+		return
+	}
+	parser.SetRenderingOptions(map[RenderingOption]bool{
+		RenderConnectionLabels: true,
+		RenderAggregations:     true,
+	})
+	result := parser.Render()
+	expectedResult := `@startuml
+namespace connectionlabels {
+    interface AbstractInterface  {
+        - interfaceFunction() bool
+
+    }
+    class ImplementsAbstractInterface << (S,Aquamarine) >> {
+        + PublicUse AbstractInterface
+
+        - interfaceFunction() bool
+
+    }
+    class connectionlabels.AliasOfInt << (T, #FF7700) >>  {
+    }
+}
+"connectionlabels.AliasOfInt" *-- "extends""connectionlabels.ImplementsAbstractInterface"
+
+"connectionlabels.AbstractInterface" <|-- "implements""connectionlabels.ImplementsAbstractInterface"
+
+"connectionlabels.ImplementsAbstractInterface""uses" o-- "connectionlabels.AbstractInterface"
+
+"__builtin__.int" #.. "alias of""connectionlabels.AliasOfInt"
+@enduml
+`
+	if result != expectedResult {
+		t.Errorf("TestConnectionLabelsRendering: expecting \n%s\n got \n%s\n", expectedResult, result)
+	}
+
 }
