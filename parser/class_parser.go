@@ -301,6 +301,11 @@ func (p *ClassParser) Render() string {
 		p.renderStructures(pack, structures, str)
 
 	}
+	if p.renderingOptions.Aliases {
+		for name, alias := range p.allAliases {
+			renderAlias(name, alias, str)
+		}
+	}
 	if !p.renderingOptions.Fields {
 		str.WriteLineWithDepth(0, "hide fields")
 	}
@@ -329,11 +334,6 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 		}
 		if p.renderingOptions.Aggregations {
 			str.WriteLineWithDepth(0, aggregations.String())
-		}
-		if p.renderingOptions.Aliases {
-			for name, alias := range p.allAliases {
-				renderAlias(name, alias, str)
-			}
 		}
 	}
 }
