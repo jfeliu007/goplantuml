@@ -945,3 +945,18 @@ namespace connectionlabels {
 	}
 
 }
+
+func TestNewClassDiagramWithOptions(t *testing.T) {
+	options := &ClassDiagramOptions{
+		RenderingOptions: map[RenderingOption]bool{
+			RenderAggregations: true,
+		},
+	}
+	parser, err := NewClassDiagramWithOptions(options)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	if parser.renderingOptions.Aggregations != true {
+		t.Errorf("TestNewClassDiagramWithOptions: Expected Aggregations to be true got false")
+	}
+}
