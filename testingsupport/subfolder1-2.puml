@@ -1,7 +1,7 @@
 @startuml
 namespace subfolder2 {
     class Subfolder2 << (S,Aquamarine) >> {
-        + SubfolderFunction() bool
+        + SubfolderFunction(b bool, i int) bool
 
     }
 }
@@ -10,7 +10,7 @@ namespace subfolder2 {
 
 namespace subfolder3 {
     interface SubfolderInterface  {
-        + SubfolderFunction() bool
+        + SubfolderFunction( bool,  int) bool
 
     }
 }

@@ -4,7 +4,6 @@ package subfolder2
 type Subfolder2 struct {
 }
 
-//SubfolderFunction for testing purposes
-func (s *Subfolder2) SubfolderFunction(bool, int) bool {
+func (s *Subfolder2) SubfolderFunction(b bool, i int) bool {
 	return true
 }
