@@ -6,6 +6,14 @@ namespace parser {
         + AliasOf string
 
     }
+    class ClassDiagramOptions << (S,Aquamarine) >> {
+        + FileSystem afero.Fs
+        + Directories []string
+        + IgnoredDirectories []string
+        + RenderingOptions <font color=blue>map</font>[RenderingOption]bool
+        + Recursive bool
+
+    }
     class ClassParser << (S,Aquamarine) >> {
         - renderingOptions *RenderingOptions
         - structure <font color=blue>map</font>[string]<font color=blue>map</font>[string]*Struct
@@ -90,6 +98,8 @@ namespace parser {
 "strings.Builder" *-- "extends""parser.LineStringBuilder"
 
 
+"parser.ClassDiagramOptions""uses" o-- "afero.Fs"
+"parser.ClassDiagramOptions""uses" o-- "parser.RenderingOption"
 "parser.Function""uses" o-- "parser.Field"
 "parser.Struct""uses" o-- "parser.Field"
 "parser.Struct""uses" o-- "parser.Function"

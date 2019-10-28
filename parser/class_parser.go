@@ -24,6 +24,8 @@ import (
 	"sort"
 	"strings"
 	"unicode"
+
+	"github.com/spf13/afero"
 )
 
 //LineStringBuilder extends the strings.Builder and adds functionality to build a string with tabs and
@@ -44,6 +46,15 @@ func (lsb *LineStringBuilder) WriteLineWithDepth(depth int, str string) {
 	lsb.WriteString(strings.Repeat(tab, depth))
 	lsb.WriteString(str)
 	lsb.WriteString("\n")
+}
+
+//ClassDiagramOptions will provide a way for callers of the NewClassDiagramFs() function to pass all the necessary arguments.
+type ClassDiagramOptions struct {
+	FileSystem         afero.Fs
+	Directories        []string
+	IgnoredDirectories []string
+	RenderingOptions   map[RenderingOption]bool
+	Recursive          bool
 }
 
 //RenderingOptions will allow the class parser to optionally enebale or disable the things to render.
@@ -93,9 +104,10 @@ type ClassParser struct {
 	allAliases         map[string]*Alias
 }
 
-//NewClassDiagram returns a new classParser with which can Render the class diagram of
-// files int eh given directory
-func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recursive bool) (*ClassParser, error) {
+//NewClassDiagramWithOptions returns a new classParser with which can Render the class diagram of
+// files in the given directory passed in the ClassDiargamOptions. This will also alow for different types of FileSystems
+// Passed since it is part of the ClassDiagramOptions as well.
+func NewClassDiagramWithOptions(options *ClassDiagramOptions) (*ClassParser, error) {
 	classParser := &ClassParser{
 		renderingOptions: &RenderingOptions{
 			Aggregations:     false,
@@ -113,12 +125,12 @@ func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recurs
 		allAliases:    make(map[string]*Alias),
 	}
 	ignoreDirectoryMap := map[string]struct{}{}
-	for _, dir := range ignoreDirectories {
+	for _, dir := range options.IgnoredDirectories {
 		ignoreDirectoryMap[dir] = struct{}{}
 	}
-	for _, directoryPath := range directoryPaths {
-		if recursive {
-			err := filepath.Walk(directoryPath, func(path string, info os.FileInfo, err error) error {
+	for _, directoryPath := range options.Directories {
+		if options.Recursive {
+			err := afero.Walk(options.FileSystem, directoryPath, func(path string, info os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -155,7 +167,21 @@ func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recurs
 			}
 		}
 	}
+	classParser.SetRenderingOptions(options.RenderingOptions)
 	return classParser, nil
+}
+
+//NewClassDiagram returns a new classParser with which can Render the class diagram of
+// files in the given directory
+func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recursive bool) (*ClassParser, error) {
+	options := &ClassDiagramOptions{
+		Directories:        directoryPaths,
+		IgnoredDirectories: ignoreDirectories,
+		Recursive:          recursive,
+		RenderingOptions:   map[RenderingOption]bool{},
+		FileSystem:         afero.NewOsFs(),
+	}
+	return NewClassDiagramWithOptions(options)
 }
 
 //parse the given ast.Package into the ClassParser structure
