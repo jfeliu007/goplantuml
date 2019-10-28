@@ -6,6 +6,12 @@ namespace parser {
         + AliasOf string
 
     }
+    class AliasSlice << (S,Aquamarine) >> {
+        + Len() int
+        + Less(i int, j int) bool
+        + Swap(i int, j int) 
+
+    }
     class ClassDiagramOptions << (S,Aquamarine) >> {
         + FileSystem afero.Fs
         + Directories []string
@@ -92,6 +98,8 @@ namespace parser {
         + AddMethod(method *ast.Field, aliases <font color=blue>map</font>[string]string) 
 
     }
+    class parser.AliasSlice << (T, #FF7700) >>  {
+    }
     class parser.RenderingOption << (T, #FF7700) >>  {
     }
 }
@@ -105,4 +113,5 @@ namespace parser {
 "parser.Struct""uses" o-- "parser.Function"
 
 "__builtin__.int" #.. "alias of""parser.RenderingOption"
+"parser.[]Alias" #.. "alias of""parser.AliasSlice"
 @enduml

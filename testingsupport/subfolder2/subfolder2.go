@@ -4,6 +4,7 @@ package subfolder2
 type Subfolder2 struct {
 }
 
+//SubfolderFunction is for testing purposes
 func (s *Subfolder2) SubfolderFunction(b bool, i int) bool {
 	return true
 }
