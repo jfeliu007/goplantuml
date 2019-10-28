@@ -7,9 +7,11 @@ go:
 before_install:
   - go get -t -v ./...
   - go get -u golang.org/x/lint/golint
+  - go get github.com/fzipp/gocyclo
 script:
   - go test ./parser -coverprofile=coverage.txt -covermode=atomic
   - golint -set_exit_status ./...
+  - gocyclo -over 15 ./parser
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
