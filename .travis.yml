@@ -6,8 +6,10 @@ go:
 
 before_install:
   - go get -t -v ./...
+  - go get -u golang.org/x/lint/golint
 script:
   - go test ./parser -coverprofile=coverage.txt -covermode=atomic
+  - golint -set_exit_status ./...
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
