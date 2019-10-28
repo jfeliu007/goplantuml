@@ -415,12 +415,12 @@ func (p *ClassParser) renderAliases(str *LineStringBuilder) {
 	if p.renderingOptions.ConnectionLabels {
 		aliasString = aliasOf
 	}
-	orderedAliases := []string{}
-	for name := range p.allAliases {
-		orderedAliases = append(orderedAliases, name)
+	orderedAliases := AliasSlice{}
+	for _, alias := range p.allAliases {
+		orderedAliases = append(orderedAliases, *alias)
 	}
-	for _, name := range orderedAliases {
-		alias := p.allAliases[name]
+	sort.Sort(orderedAliases)
+	for _, alias := range orderedAliases {
 		str.WriteLineWithDepth(0, fmt.Sprintf(`"%s" #.. %s"%s"`, alias.Name, aliasString, alias.AliasOf))
 	}
 }
@@ -466,10 +466,6 @@ func (p *ClassParser) renderCompositions(structure *Struct, name string, composi
 	orderedCompositions := []string{}
 
 	for c := range structure.Composition {
-		orderedCompositions = append(orderedCompositions, c)
-	}
-	sort.Strings(orderedCompositions)
-	for _, c := range orderedCompositions {
 		if !strings.Contains(c, ".") {
 			c = fmt.Sprintf("%s.%s", p.getPackageName(c, structure), c)
 		}
@@ -477,7 +473,12 @@ func (p *ClassParser) renderCompositions(structure *Struct, name string, composi
 		if p.renderingOptions.ConnectionLabels {
 			composedString = extends
 		}
-		composition.WriteLineWithDepth(0, fmt.Sprintf(`"%s" *-- %s"%s.%s"`, c, composedString, structure.PackageName, name))
+		c = fmt.Sprintf(`"%s" *-- %s"%s.%s"`, c, composedString, structure.PackageName, name)
+		orderedCompositions = append(orderedCompositions, c)
+	}
+	sort.Strings(orderedCompositions)
+	for _, c := range orderedCompositions {
+		composition.WriteLineWithDepth(0, c)
 	}
 }
 
@@ -517,10 +518,6 @@ func (p *ClassParser) renderExtends(structure *Struct, name string, extends *Lin
 
 	orderedExtends := []string{}
 	for c := range structure.Extends {
-		orderedExtends = append(orderedExtends, c)
-	}
-	sort.Strings(orderedExtends)
-	for _, c := range orderedExtends {
 		if !strings.Contains(c, ".") {
 			c = fmt.Sprintf("%s.%s", structure.PackageName, c)
 		}
@@ -528,7 +525,12 @@ func (p *ClassParser) renderExtends(structure *Struct, name string, extends *Lin
 		if p.renderingOptions.ConnectionLabels {
 			implementString = implements
 		}
-		extends.WriteLineWithDepth(0, fmt.Sprintf(`"%s" <|-- %s"%s.%s"`, c, implementString, structure.PackageName, name))
+		c = fmt.Sprintf(`"%s" <|-- %s"%s.%s"`, c, implementString, structure.PackageName, name)
+		orderedExtends = append(orderedExtends, c)
+	}
+	sort.Strings(orderedExtends)
+	for _, c := range orderedExtends {
+		extends.WriteLineWithDepth(0, c)
 	}
 }
 
