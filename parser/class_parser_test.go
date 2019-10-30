@@ -413,6 +413,8 @@ func getEmptyParser(packageName string) *ClassParser {
 		structure:          make(map[string]map[string]*Struct),
 		allInterfaces:      make(map[string]struct{}),
 		allStructs:         make(map[string]struct{}),
+		allAliases:         make(map[string]*Alias),
+		allRenamedStructs:  make(map[string]map[string]string),
 	}
 	result.structure[packageName] = make(map[string]*Struct)
 	return result
@@ -958,5 +960,12 @@ func TestNewClassDiagramWithOptions(t *testing.T) {
 	}
 	if parser.renderingOptions.Aggregations != true {
 		t.Errorf("TestNewClassDiagramWithOptions: Expected Aggregations to be true got false")
+	}
+}
+
+func TestGenerateRenamedStructName(t *testing.T) {
+	generatedName := generateRenamedStructName(`a#b%c.d`)
+	if generatedName != "abcd" {
+		t.Errorf("TestGenerateRenamedStructName: Expected result to be abcd, got %s", generatedName)
 	}
 }
