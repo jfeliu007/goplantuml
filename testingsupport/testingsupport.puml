@@ -6,10 +6,16 @@ namespace testingsupport {
         - test() 
 
     }
+    class testingsupport.TestComplicatedAlias << (T, #FF7700) >>  {
+    }
     class testingsupport.myInt << (T, #FF7700) >>  {
+    }
+    class "<font color=blue>func</font>(strings.Builder) bool" as fontcolorbluefuncfontstringsBuilderbool {
+        'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces
     }
 }
 
 
 "__builtin__.int" #.. "testingsupport.myInt"
+"testingsupport.fontcolorbluefuncfontstringsBuilderbool" #.. "testingsupport.TestComplicatedAlias"
 @enduml

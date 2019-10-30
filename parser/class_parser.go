@@ -21,6 +21,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"unicode"
@@ -68,6 +69,8 @@ type RenderingOptions struct {
 	ConnectionLabels bool
 }
 
+const aliasComplexNameComment = "'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces"
+
 //RenderAggregations is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render aggregations
 const RenderAggregations = 0
 
@@ -102,6 +105,7 @@ type ClassParser struct {
 	allStructs         map[string]struct{}
 	allImports         map[string]string
 	allAliases         map[string]*Alias
+	allRenamedStructs  map[string]map[string]string
 }
 
 //NewClassDiagramWithOptions returns a new classParser with which can Render the class diagram of
@@ -118,11 +122,12 @@ func NewClassDiagramWithOptions(options *ClassDiagramOptions) (*ClassParser, err
 			Aliases:          true,
 			ConnectionLabels: false,
 		},
-		structure:     make(map[string]map[string]*Struct),
-		allInterfaces: make(map[string]struct{}),
-		allStructs:    make(map[string]struct{}),
-		allImports:    make(map[string]string),
-		allAliases:    make(map[string]*Alias),
+		structure:         make(map[string]map[string]*Struct),
+		allInterfaces:     make(map[string]struct{}),
+		allStructs:        make(map[string]struct{}),
+		allImports:        make(map[string]string),
+		allAliases:        make(map[string]*Alias),
+		allRenamedStructs: make(map[string]map[string]string),
 	}
 	ignoreDirectoryMap := map[string]struct{}{}
 	for _, dir := range options.IgnoredDirectories {
@@ -329,6 +334,14 @@ func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 		p.allStructs[fullName] = struct{}{}
 	case "alias":
 		p.allAliases[typeName] = alias
+		if strings.Count(alias.Name, ".") > 1 {
+			pack := strings.SplitN(alias.Name, ".", 2)
+			if _, ok := p.allRenamedStructs[pack[0]]; !ok {
+				p.allRenamedStructs[pack[0]] = map[string]string{}
+			}
+			renamedClass := generateRenamedStructName(pack[1])
+			p.allRenamedStructs[pack[0]][renamedClass] = pack[1]
+		}
 	}
 }
 
@@ -396,6 +409,11 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 			structure := structures[name]
 			p.renderStructure(structure, pack, name, str, composition, extends, aggregations)
 		}
+		for tempName, name := range p.allRenamedStructs[pack] {
+			str.WriteLineWithDepth(1, fmt.Sprintf(`class "%s" as %s {`, name, tempName))
+			str.WriteLineWithDepth(2, aliasComplexNameComment)
+			str.WriteLineWithDepth(1, "}")
+		}
 		str.WriteLineWithDepth(0, fmt.Sprintf(`}`))
 		if p.renderingOptions.Compositions {
 			str.WriteLineWithDepth(0, composition.String())
@@ -421,7 +439,17 @@ func (p *ClassParser) renderAliases(str *LineStringBuilder) {
 	}
 	sort.Sort(orderedAliases)
 	for _, alias := range orderedAliases {
-		str.WriteLineWithDepth(0, fmt.Sprintf(`"%s" #.. %s"%s"`, alias.Name, aliasString, alias.AliasOf))
+		aliasName := alias.Name
+		if strings.Count(alias.Name, ".") > 1 {
+			split := strings.SplitN(alias.Name, ".", 2)
+			if aliasRename, ok := p.allRenamedStructs[split[0]]; ok {
+				renamed := generateRenamedStructName(split[1])
+				if _, ok := aliasRename[renamed]; ok {
+					aliasName = fmt.Sprintf("%s.%s", split[0], renamed)
+				}
+			}
+		}
+		str.WriteLineWithDepth(0, fmt.Sprintf(`"%s" #.. %s"%s"`, aliasName, aliasString, alias.AliasOf))
 	}
 }
 
@@ -627,4 +655,8 @@ func (p *ClassParser) SetRenderingOptions(ro map[RenderingOption]bool) error {
 
 	}
 	return nil
+}
+func generateRenamedStructName(currentName string) string {
+	reg, _ := regexp.Compile("[^a-zA-Z0-9]+")
+	return reg.ReplaceAllString(currentName, "")
 }
