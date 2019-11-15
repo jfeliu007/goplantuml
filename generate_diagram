@@ -1,2 +1,2 @@
 #!/bin/bash
-go install ./... && goplantuml -show-connection-labels -show-aggregations -recursive -ignore="./testingsupport/"  ./parser > ClassDiagram.puml
+go install ./... && goplantuml -show-connection-labels -show-aggregations -recursive -ignore="./testingsupport/" -title="Parser Class Diagram" ./parser > ClassDiagram.puml

@@ -6,10 +6,30 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	goplantuml "github.com/jfeliu007/goplantuml/parser"
 )
+
+//RenderingOptionSlice will implements the sort interface
+type RenderingOptionSlice []goplantuml.RenderingOption
+
+// Len is the number of elements in the collection.
+func (as RenderingOptionSlice) Len() int {
+	return len(as)
+}
+
+// Less reports whether the element with
+// index i should sort before the element with index j.
+func (as RenderingOptionSlice) Less(i, j int) bool {
+	return as[i] < as[j]
+}
+
+// Swap swaps the elements with indexes i and j.
+func (as RenderingOptionSlice) Swap(i, j int) {
+	as[i], as[j] = as[j], as[i]
+}
 
 func main() {
 	recursive := flag.Bool("recursive", false, "walk all directories recursively")
@@ -22,8 +42,44 @@ func main() {
 	showImplementations := flag.Bool("show-implementations", false, "Shows implementations even when -hide-connections is used")
 	showAliases := flag.Bool("show-aliases", false, "Shows aliases even when -hide-connections is used")
 	showConnectionLabels := flag.Bool("show-connection-labels", false, "Shows labels in the connections to identify the connections types (e.g. extends, implements, aggregates, alias of")
+	title := flag.String("title", "", "Title of the generated diagram")
+	notes := flag.String("notes", "", "Comma separated list of notes to be added to the diagram")
+	showOptionsAsNote := flag.Bool("show-options-as-note", false, "Show a note in the diagram with the none evident options ran with this CLI")
 
 	flag.Parse()
+	renderingOptions := map[goplantuml.RenderingOption]interface{}{
+		goplantuml.RenderConnectionLabels: *showConnectionLabels,
+		goplantuml.RenderFields:           !*hideFields,
+		goplantuml.RenderMethods:          !*hideMethods,
+		goplantuml.RenderAggregations:     *showAggregations,
+		goplantuml.RenderTitle:            *title,
+	}
+	if *hideConnections {
+		renderingOptions[goplantuml.RenderAliases] = *showAliases
+		renderingOptions[goplantuml.RenderCompositions] = *showCompositions
+		renderingOptions[goplantuml.RenderImplementations] = *showImplementations
+
+	}
+	noteList := []string{}
+	if *showOptionsAsNote {
+		legend, err := getLegend(renderingOptions)
+		if err != nil {
+			fmt.Printf("%s\n", err.Error())
+			os.Exit(1)
+		}
+		noteList = append(noteList, legend)
+	}
+	if *notes != "" {
+		noteList = append(noteList, "", "<b><u>Notes</u></b>")
+	}
+	split := strings.Split(*notes, ",")
+	for _, note := range split {
+		trimmed := strings.TrimSpace(note)
+		if trimmed != "" {
+			noteList = append(noteList, trimmed)
+		}
+	}
+	renderingOptions[goplantuml.RenderNotes] = strings.Join(noteList, "\n")
 	dirs, err := getDirectories()
 
 	if err != nil {
@@ -37,18 +93,6 @@ func main() {
 		fmt.Println("usage:\ngoplantum [-ignore=<DIRLIST>]\nDIRLIST Must be a valid comma separated list of existing directories")
 		fmt.Println(err.Error())
 		os.Exit(1)
-	}
-	renderingOptions := map[goplantuml.RenderingOption]bool{
-		goplantuml.RenderConnectionLabels: *showConnectionLabels,
-		goplantuml.RenderFields:           !*hideFields,
-		goplantuml.RenderMethods:          !*hideMethods,
-		goplantuml.RenderAggregations:     *showAggregations,
-	}
-	if *hideConnections {
-		renderingOptions[goplantuml.RenderAliases] = *showAliases
-		renderingOptions[goplantuml.RenderCompositions] = *showCompositions
-		renderingOptions[goplantuml.RenderImplementations] = *showImplementations
-
 	}
 
 	result, err := goplantuml.NewClassDiagram(dirs, ignoredDirectories, *recursive)
@@ -99,4 +143,31 @@ func getIgnoredDirectories(list string) ([]string, error) {
 		result = append(result, dirAbs)
 	}
 	return result, nil
+}
+
+func getLegend(ro map[goplantuml.RenderingOption]interface{}) (string, error) {
+	result := "<u><b>Legend</b></u>\n"
+	orderedOptions := RenderingOptionSlice{}
+	for o := range ro {
+		orderedOptions = append(orderedOptions, o)
+	}
+	sort.Sort(orderedOptions)
+	for _, option := range orderedOptions {
+		val := ro[option]
+		switch option {
+		case goplantuml.RenderAggregations:
+			result = fmt.Sprintf("%sRender Aggregations: %t\n", result, val.(bool))
+		case goplantuml.RenderAliases:
+			result = fmt.Sprintf("%sRender Connections: %t\n", result, val.(bool))
+		case goplantuml.RenderCompositions:
+			result = fmt.Sprintf("%sRender Compositions: %t\n", result, val.(bool))
+		case goplantuml.RenderFields:
+			result = fmt.Sprintf("%sRender Fields: %t\n", result, val.(bool))
+		case goplantuml.RenderImplementations:
+			result = fmt.Sprintf("%sRender Implementations: %t\n", result, val.(bool))
+		case goplantuml.RenderMethods:
+			result = fmt.Sprintf("%sRender Methods: %t\n", result, val.(bool))
+		}
+	}
+	return strings.TrimSpace(result), nil
 }

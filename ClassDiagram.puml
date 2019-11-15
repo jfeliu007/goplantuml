@@ -1,4 +1,5 @@
 @startuml
+title Parser Class Diagram
 namespace parser {
     class Alias << (S,Aquamarine) >> {
         + Name string
@@ -16,7 +17,7 @@ namespace parser {
         + FileSystem afero.Fs
         + Directories []string
         + IgnoredDirectories []string
-        + RenderingOptions <font color=blue>map</font>[RenderingOption]bool
+        + RenderingOptions <font color=blue>map</font>[RenderingOption]<font color=blue>interface</font>{}
         + Recursive bool
 
     }
@@ -28,6 +29,7 @@ namespace parser {
         - allStructs <font color=blue>map</font>[string]<font color=blue>struct</font>{}
         - allImports <font color=blue>map</font>[string]string
         - allAliases <font color=blue>map</font>[string]*Alias
+        - allRenamedStructs <font color=blue>map</font>[string]<font color=blue>map</font>[string]string
 
         - parsePackage(node ast.Node) 
         - parseImports(impt *ast.ImportSpec) 
@@ -48,7 +50,7 @@ namespace parser {
         - getStruct(structName string) *Struct
 
         + Render() string
-        + SetRenderingOptions(ro <font color=blue>map</font>[RenderingOption]bool) error
+        + SetRenderingOptions(ro <font color=blue>map</font>[RenderingOption]<font color=blue>interface</font>{}) error
 
     }
     class Field << (S,Aquamarine) >> {
@@ -72,6 +74,8 @@ namespace parser {
 
     }
     class RenderingOptions << (S,Aquamarine) >> {
+        + Title string
+        + Notes string
         + Aggregations bool
         + Fields bool
         + Methods bool
