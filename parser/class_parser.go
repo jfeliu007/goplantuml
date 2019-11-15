@@ -54,12 +54,14 @@ type ClassDiagramOptions struct {
 	FileSystem         afero.Fs
 	Directories        []string
 	IgnoredDirectories []string
-	RenderingOptions   map[RenderingOption]bool
+	RenderingOptions   map[RenderingOption]interface{}
 	Recursive          bool
 }
 
 //RenderingOptions will allow the class parser to optionally enebale or disable the things to render.
 type RenderingOptions struct {
+	Title            string
+	Notes            string
 	Aggregations     bool
 	Fields           bool
 	Methods          bool
@@ -92,6 +94,12 @@ const RenderMethods = 5
 //RenderConnectionLabels is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render the connection labels
 const RenderConnectionLabels = 6
 
+//RenderTitle is the options for the Title of the diagram. The value of this will be rendered as a title unless empty
+const RenderTitle = 7
+
+//RenderNotes contains a list of notes to be rendered in the class diagram
+const RenderNotes = 8
+
 //RenderingOption is an alias for an it so it is easier to use it as options in a map (see SetRenderingOptions(map[RenderingOption]bool) error)
 type RenderingOption int
 
@@ -121,6 +129,8 @@ func NewClassDiagramWithOptions(options *ClassDiagramOptions) (*ClassParser, err
 			Implementations:  true,
 			Aliases:          true,
 			ConnectionLabels: false,
+			Title:            "",
+			Notes:            "",
 		},
 		structure:         make(map[string]map[string]*Struct),
 		allInterfaces:     make(map[string]struct{}),
@@ -183,7 +193,7 @@ func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recurs
 		Directories:        directoryPaths,
 		IgnoredDirectories: ignoreDirectories,
 		Recursive:          recursive,
-		RenderingOptions:   map[RenderingOption]bool{},
+		RenderingOptions:   map[RenderingOption]interface{}{},
 		FileSystem:         afero.NewOsFs(),
 	}
 	return NewClassDiagramWithOptions(options)
@@ -367,6 +377,14 @@ func getBasicType(theType ast.Expr) ast.Expr {
 func (p *ClassParser) Render() string {
 	str := &LineStringBuilder{}
 	str.WriteLineWithDepth(0, "@startuml")
+	if p.renderingOptions.Title != "" {
+		str.WriteLineWithDepth(0, fmt.Sprintf(`title %s`, p.renderingOptions.Title))
+	}
+	if note := strings.TrimSpace(p.renderingOptions.Notes); note != "" {
+		str.WriteLineWithDepth(0, "legend")
+		str.WriteLineWithDepth(0, note)
+		str.WriteLineWithDepth(0, "end legend")
+	}
 
 	var packages []string
 	for pack := range p.structure {
@@ -632,23 +650,27 @@ func (p *ClassParser) getStruct(structName string) *Struct {
 }
 
 //SetRenderingOptions Sets the rendering options for the Render() Function
-func (p *ClassParser) SetRenderingOptions(ro map[RenderingOption]bool) error {
+func (p *ClassParser) SetRenderingOptions(ro map[RenderingOption]interface{}) error {
 	for option, val := range ro {
 		switch option {
 		case RenderAggregations:
-			p.renderingOptions.Aggregations = val
+			p.renderingOptions.Aggregations = val.(bool)
 		case RenderAliases:
-			p.renderingOptions.Aliases = val
+			p.renderingOptions.Aliases = val.(bool)
 		case RenderCompositions:
-			p.renderingOptions.Compositions = val
+			p.renderingOptions.Compositions = val.(bool)
 		case RenderFields:
-			p.renderingOptions.Fields = val
+			p.renderingOptions.Fields = val.(bool)
 		case RenderImplementations:
-			p.renderingOptions.Implementations = val
+			p.renderingOptions.Implementations = val.(bool)
 		case RenderMethods:
-			p.renderingOptions.Methods = val
+			p.renderingOptions.Methods = val.(bool)
 		case RenderConnectionLabels:
-			p.renderingOptions.ConnectionLabels = val
+			p.renderingOptions.ConnectionLabels = val.(bool)
+		case RenderTitle:
+			p.renderingOptions.Title = val.(string)
+		case RenderNotes:
+			p.renderingOptions.Notes = val.(string)
 		default:
 			return fmt.Errorf("Invalid Rendering option %v", option)
 		}

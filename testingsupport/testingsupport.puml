@@ -1,4 +1,10 @@
 @startuml
+title Test Title
+legend
+Notes Example 1
+Notes Example 1 continues
+Notes Example 2
+end legend
 namespace testingsupport {
     class test << (S,Aquamarine) >> {
         - field int

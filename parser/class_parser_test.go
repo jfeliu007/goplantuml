@@ -198,7 +198,7 @@ func TestRenderStructures(t *testing.T) {
 	}
 	lineB = &LineStringBuilder{}
 	parser = getEmptyParser("main")
-	parser.SetRenderingOptions(map[RenderingOption]bool{
+	parser.SetRenderingOptions(map[RenderingOption]interface{}{
 		RenderAggregations: true,
 	})
 	parser.renderStructures("main", structMap, lineB)
@@ -540,6 +540,10 @@ func TestRender(t *testing.T) {
 		t.Errorf("TestRender: expected no errors, got %s", err.Error())
 		return
 	}
+	parser.SetRenderingOptions(map[RenderingOption]interface{}{
+		RenderTitle: "Test Title",
+		RenderNotes: "Notes Example 1\nNotes Example 1 continues\nNotes Example 2",
+	})
 
 	resultRender := parser.Render()
 	result, err := ioutil.ReadFile("../testingsupport/testingsupport.puml")
@@ -662,7 +666,7 @@ func TestSetRenderingOptions(t *testing.T) {
 		Aliases:          false,
 		ConnectionLabels: true,
 	}
-	parser.SetRenderingOptions(map[RenderingOption]bool{
+	parser.SetRenderingOptions(map[RenderingOption]interface{}{
 		RenderAggregations:     true,
 		RenderImplementations:  false,
 		RenderCompositions:     true,
@@ -675,7 +679,7 @@ func TestSetRenderingOptions(t *testing.T) {
 		t.Errorf("TestRenderingOptions: expected renderingOptions to be %v got %v", newRenderingOptions, parser.renderingOptions)
 	}
 
-	err := parser.SetRenderingOptions(map[RenderingOption]bool{
+	err := parser.SetRenderingOptions(map[RenderingOption]interface{}{
 		-1: true,
 	})
 	if err == nil {
@@ -797,14 +801,14 @@ func TestGetBasic(t *testing.T) {
 func TestRenderingOptions(t *testing.T) {
 	tt := []struct {
 		Name             string
-		RenderingOptions map[RenderingOption]bool
+		RenderingOptions map[RenderingOption]interface{}
 		InputFolder      string
 		ExpectedResult   string
 	}{
 		{
 			Name:             "Show Fields",
 			InputFolder:      "../testingsupport/renderingoptions",
-			RenderingOptions: map[RenderingOption]bool{},
+			RenderingOptions: map[RenderingOption]interface{}{},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
     class Test << (S,Aquamarine) >> {
@@ -821,7 +825,7 @@ namespace renderingoptions {
 		}, {
 			Name:        "Hide Fields",
 			InputFolder: "../testingsupport/renderingoptions",
-			RenderingOptions: map[RenderingOption]bool{
+			RenderingOptions: map[RenderingOption]interface{}{
 				RenderFields: false,
 			},
 			ExpectedResult: `@startuml
@@ -842,7 +846,7 @@ hide fields
 		{
 			Name:             "Show Methods",
 			InputFolder:      "../testingsupport/renderingoptions",
-			RenderingOptions: map[RenderingOption]bool{},
+			RenderingOptions: map[RenderingOption]interface{}{},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
     class Test << (S,Aquamarine) >> {
@@ -859,7 +863,7 @@ namespace renderingoptions {
 		}, {
 			Name:        "Hide Methods",
 			InputFolder: "../testingsupport/renderingoptions",
-			RenderingOptions: map[RenderingOption]bool{
+			RenderingOptions: map[RenderingOption]interface{}{
 				RenderMethods: false,
 			},
 			ExpectedResult: `@startuml
@@ -913,7 +917,7 @@ func TestConnectionLabelsRendering(t *testing.T) {
 		t.Errorf("TestConnectionLabelsRendering: expected no error but got %s", err.Error())
 		return
 	}
-	parser.SetRenderingOptions(map[RenderingOption]bool{
+	parser.SetRenderingOptions(map[RenderingOption]interface{}{
 		RenderConnectionLabels: true,
 		RenderAggregations:     true,
 	})
@@ -950,7 +954,7 @@ namespace connectionlabels {
 
 func TestNewClassDiagramWithOptions(t *testing.T) {
 	options := &ClassDiagramOptions{
-		RenderingOptions: map[RenderingOption]bool{
+		RenderingOptions: map[RenderingOption]interface{}{
 			RenderAggregations: true,
 		},
 	}
