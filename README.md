@@ -14,15 +14,12 @@ Take a look at [www.dumels.com](https://www.dumels.com). We have created dumels 
 Please, review the code of conduct [here](https://github.com/jfeliu007/goplantuml/blob/master/CODE_OF_CONDUCT.md "here").
 
 ### Prerequisites
-golang 1.10 or above
+golang 1.12 or above
 
 ### Installing
 
 ```
-go get github.com/jfeliu007/goplantuml/parser
-go get github.com/jfeliu007/goplantuml/cmd/goplantuml
-cd $GOPATH/src/github.com/jfeliu007/goplantuml
-go install ./...
+go get github.com/jfeliu007/goplantuml/v2/cmd/goplantuml
 ```
 
 This will install the command goplantuml in your GOPATH bin folder.
@@ -130,7 +127,7 @@ strings.Builder *-- parser.LineStringBuilder
 ```
 ```
 goplantuml $GOPATH/src/github.com/jfeliu007/goplantuml/parser > ClassDiagram.puml
-// Generates a file ClassDiagram.plum with the previous specifications
+// Generates a file ClassDiagram.puml with the previous specifications
 ```
 
 There are two different relationships considered in goplantuml:

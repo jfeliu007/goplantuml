@@ -5,9 +5,10 @@ go:
   - 1.11.x
 
 before_install:
-  - go get -t -v ./...
+  - go mod download
   - go get -u golang.org/x/lint/golint
   - go get github.com/fzipp/gocyclo/cmd/gocyclo
+
 script:
   - go test ./parser -coverprofile=coverage.txt -covermode=atomic
   - golint -set_exit_status ./...
