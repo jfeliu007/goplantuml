@@ -140,7 +140,7 @@ func (s1 *MyStruct1) foo() bool {
 	return true
 }
 
-//MyStruct2 will be direclty composed of MyStruct1 so it will have a composition relationship with it
+//MyStruct2 will be directly composed of MyStruct1 so it will have a composition relationship with it
 type MyStruct2 struct {
 	MyStruct1
 }
