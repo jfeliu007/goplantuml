@@ -41,6 +41,10 @@ Usage of goplantuml:
         hides methods
   -ignore string
         comma separated list of folders to ignore
+  -notes string
+        Comma separated list of notes to be added to the diagram
+  -output string
+        output file path. If omitted, then this will default to standard output
   -recursive
         walk all directories recursively
   -show-aggregations
@@ -53,6 +57,10 @@ Usage of goplantuml:
         Shows labels in the connections to identify the connections types (e.g. extends, implements, aggregates, alias of
   -show-implementations
         Shows implementations even when -hide-connections is used
+  -show-options-as-note
+        Show a note in the diagram with the none evident options ran with this CLI
+  -title string
+        Title of the generated diagram
 ```
 
 #### Example

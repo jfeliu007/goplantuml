@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
@@ -44,6 +45,7 @@ func main() {
 	showConnectionLabels := flag.Bool("show-connection-labels", false, "Shows labels in the connections to identify the connections types (e.g. extends, implements, aggregates, alias of")
 	title := flag.String("title", "", "Title of the generated diagram")
 	notes := flag.String("notes", "", "Comma separated list of notes to be added to the diagram")
+	output := flag.String("output", "", "output file path. If omitted, then this will default to standard output")
 	showOptionsAsNote := flag.Bool("show-options-as-note", false, "Show a note in the diagram with the none evident options ran with this CLI")
 
 	flag.Parse()
@@ -64,7 +66,7 @@ func main() {
 	if *showOptionsAsNote {
 		legend, err := getLegend(renderingOptions)
 		if err != nil {
-			fmt.Printf("%s\n", err.Error())
+			fmt.Fprint(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 		noteList = append(noteList, legend)
@@ -84,24 +86,34 @@ func main() {
 
 	if err != nil {
 		fmt.Println("usage:\ngoplantum <DIR>\nDIR Must be a valid directory")
-		fmt.Println(err.Error())
+		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 	ignoredDirectories, err := getIgnoredDirectories(*ignore)
 	if err != nil {
 
 		fmt.Println("usage:\ngoplantum [-ignore=<DIRLIST>]\nDIRLIST Must be a valid comma separated list of existing directories")
-		fmt.Println(err.Error())
+		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 
 	result, err := goplantuml.NewClassDiagram(dirs, ignoredDirectories, *recursive)
 	result.SetRenderingOptions(renderingOptions)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(1)
 	}
-	fmt.Print(result.Render())
+	rendered := result.Render()
+	var writer io.Writer
+	if *output != "" {
+		writer, err = os.Create(*output)
+		if err != nil {
+			fmt.Fprint(os.Stderr, err.Error())
+		}
+	} else {
+		writer = os.Stdout
+	}
+	fmt.Fprint(writer, rendered)
 }
 
 func getDirectories() ([]string, error) {
