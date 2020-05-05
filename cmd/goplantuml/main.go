@@ -85,14 +85,14 @@ func main() {
 	dirs, err := getDirectories()
 
 	if err != nil {
-		fmt.Println("usage:\ngoplantuml <DIR>\nDIR Must be a valid directory")
+		fmt.Println("usage:\ngoplantum <DIR>\nDIR Must be a valid directory")
 		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 	ignoredDirectories, err := getIgnoredDirectories(*ignore)
 	if err != nil {
 
-		fmt.Println("usage:\ngoplantuml [-ignore=<DIRLIST>]\nDIRLIST Must be a valid comma separated list of existing directories")
+		fmt.Println("usage:\ngoplantum [-ignore=<DIRLIST>]\nDIRLIST Must be a valid comma separated list of existing directories")
 		fmt.Fprint(os.Stderr, err.Error())
 		os.Exit(1)
 	}
@@ -126,14 +126,14 @@ func getDirectories() ([]string, error) {
 	for _, dir := range args {
 		fi, err := os.Stat(dir)
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("could not find directory %s\n", dir)
+			return nil, fmt.Errorf("could not find directory %s", dir)
 		}
 		if !fi.Mode().IsDir() {
-			return nil, fmt.Errorf("%s is not a directory\n", dir)
+			return nil, fmt.Errorf("%s is not a directory", dir)
 		}
 		dirAbs, err := filepath.Abs(dir)
 		if err != nil {
-			return nil, fmt.Errorf("could not find directory %s\n", dir)
+			return nil, fmt.Errorf("could not find directory %s", dir)
 		}
 		dirs = append(dirs, dirAbs)
 	}
@@ -150,7 +150,7 @@ func getIgnoredDirectories(list string) ([]string, error) {
 	for _, dir := range split {
 		dirAbs, err := filepath.Abs(strings.TrimSpace(dir))
 		if err != nil {
-			return nil, fmt.Errorf("could not find directory %s\n", dir)
+			return nil, fmt.Errorf("could not find directory %s", dir)
 		}
 		result = append(result, dirAbs)
 	}
