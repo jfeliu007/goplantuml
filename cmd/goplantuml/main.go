@@ -66,7 +66,7 @@ func main() {
 	if *showOptionsAsNote {
 		legend, err := getLegend(renderingOptions)
 		if err != nil {
-			fmt.Fprint(os.Stderr, err.Error())
+			fmt.Fprintln(os.Stderr, err.Error())
 			os.Exit(1)
 		}
 		noteList = append(noteList, legend)
@@ -85,22 +85,22 @@ func main() {
 	dirs, err := getDirectories()
 
 	if err != nil {
-		fmt.Println("usage:\ngoplantum <DIR>\nDIR Must be a valid directory")
-		fmt.Fprint(os.Stderr, err.Error())
+		fmt.Println("usage:\ngoplantuml <DIR>\nDIR Must be a valid directory")
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 	ignoredDirectories, err := getIgnoredDirectories(*ignore)
 	if err != nil {
 
-		fmt.Println("usage:\ngoplantum [-ignore=<DIRLIST>]\nDIRLIST Must be a valid comma separated list of existing directories")
-		fmt.Fprint(os.Stderr, err.Error())
+		fmt.Println("usage:\ngoplantuml [-ignore=<DIRLIST>]\nDIRLIST Must be a valid comma separated list of existing directories")
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 
 	result, err := goplantuml.NewClassDiagram(dirs, ignoredDirectories, *recursive)
 	result.SetRenderingOptions(renderingOptions)
 	if err != nil {
-		fmt.Fprint(os.Stderr, err.Error())
+		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 	rendered := result.Render()
@@ -108,7 +108,7 @@ func main() {
 	if *output != "" {
 		writer, err = os.Create(*output)
 		if err != nil {
-			fmt.Fprint(os.Stderr, err.Error())
+			fmt.Fprintln(os.Stderr, err.Error())
 		}
 	} else {
 		writer = os.Stdout
