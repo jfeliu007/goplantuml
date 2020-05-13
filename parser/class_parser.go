@@ -60,15 +60,16 @@ type ClassDiagramOptions struct {
 
 //RenderingOptions will allow the class parser to optionally enebale or disable the things to render.
 type RenderingOptions struct {
-	Title            string
-	Notes            string
-	Aggregations     bool
-	Fields           bool
-	Methods          bool
-	Compositions     bool
-	Implementations  bool
-	Aliases          bool
-	ConnectionLabels bool
+	Title                   string
+	Notes                   string
+	Aggregations            bool
+	Fields                  bool
+	Methods                 bool
+	Compositions            bool
+	Implementations         bool
+	Aliases                 bool
+	ConnectionLabels        bool
+	AggregatePrivateMembers bool
 }
 
 const aliasComplexNameComment = "'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces"
@@ -99,6 +100,9 @@ const RenderTitle = 7
 
 //RenderNotes contains a list of notes to be rendered in the class diagram
 const RenderNotes = 8
+
+//AggregatePrivateMembers is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will connect aggregations with private members
+const AggregatePrivateMembers = 9
 
 //RenderingOption is an alias for an it so it is easier to use it as options in a map (see SetRenderingOptions(map[RenderingOption]bool) error)
 type RenderingOption int
@@ -530,9 +534,23 @@ func (p *ClassParser) renderCompositions(structure *Struct, name string, composi
 
 func (p *ClassParser) renderAggregations(structure *Struct, name string, aggregations *LineStringBuilder) {
 
-	orderedAggregations := []string{}
+	aggregationMap := structure.Aggregations
+	if p.renderingOptions.AggregatePrivateMembers {
+		p.updatePrivateAggregations(structure, aggregationMap)
+	}
+	p.renderAggregationMap(aggregationMap, structure, aggregations, name)
+}
 
-	for a := range structure.Aggregations {
+func (p *ClassParser) updatePrivateAggregations(structure *Struct, aggregationsMap map[string]struct{}) {
+
+	for agg := range structure.PrivateAggregations {
+		aggregationsMap[agg] = struct{}{}
+	}
+}
+
+func (p *ClassParser) renderAggregationMap(aggregationMap map[string]struct{}, structure *Struct, aggregations *LineStringBuilder, name string) {
+	var orderedAggregations []string
+	for a := range aggregationMap {
 		orderedAggregations = append(orderedAggregations, a)
 	}
 
@@ -626,13 +644,14 @@ func (p *ClassParser) getOrCreateStruct(name string) *Struct {
 	result, ok := p.structure[p.currentPackageName][name]
 	if !ok {
 		result = &Struct{
-			PackageName:  p.currentPackageName,
-			Functions:    make([]*Function, 0),
-			Fields:       make([]*Field, 0),
-			Type:         "",
-			Composition:  make(map[string]struct{}, 0),
-			Extends:      make(map[string]struct{}, 0),
-			Aggregations: make(map[string]struct{}, 0),
+			PackageName:         p.currentPackageName,
+			Functions:           make([]*Function, 0),
+			Fields:              make([]*Field, 0),
+			Type:                "",
+			Composition:         make(map[string]struct{}, 0),
+			Extends:             make(map[string]struct{}, 0),
+			Aggregations:        make(map[string]struct{}, 0),
+			PrivateAggregations: make(map[string]struct{}, 0),
 		}
 		p.structure[p.currentPackageName][name] = result
 	}
@@ -671,6 +690,8 @@ func (p *ClassParser) SetRenderingOptions(ro map[RenderingOption]interface{}) er
 			p.renderingOptions.Title = val.(string)
 		case RenderNotes:
 			p.renderingOptions.Notes = val.(string)
+		case AggregatePrivateMembers:
+			p.renderingOptions.AggregatePrivateMembers = val.(bool)
 		default:
 			return fmt.Errorf("Invalid Rendering option %v", option)
 		}

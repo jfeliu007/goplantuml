@@ -8,6 +8,7 @@ end legend
 namespace testingsupport {
     class test << (S,Aquamarine) >> {
         - field int
+        - field2 TestComplicatedAlias
 
         - test() 
 
