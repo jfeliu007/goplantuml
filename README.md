@@ -33,6 +33,8 @@ goplantuml [-recursive] path/to/gofiles path/to/gofiles2 > diagram_file_name.pum
 ```
 ```
 Usage of goplantuml:
+  -aggregate-private-members
+        Show aggregations for private members. Ignored if -show-aggregations is not used.
   -hide-connections
         hides all connections in the diagram
   -hide-fields
