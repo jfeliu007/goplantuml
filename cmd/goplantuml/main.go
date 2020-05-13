@@ -47,14 +47,15 @@ func main() {
 	notes := flag.String("notes", "", "Comma separated list of notes to be added to the diagram")
 	output := flag.String("output", "", "output file path. If omitted, then this will default to standard output")
 	showOptionsAsNote := flag.Bool("show-options-as-note", false, "Show a note in the diagram with the none evident options ran with this CLI")
-
+	aggregatePrivateMembers := flag.Bool("aggregate-private-members", false, "Show aggregations for private members. Ignored if -show-aggregations is not used.")
 	flag.Parse()
 	renderingOptions := map[goplantuml.RenderingOption]interface{}{
-		goplantuml.RenderConnectionLabels: *showConnectionLabels,
-		goplantuml.RenderFields:           !*hideFields,
-		goplantuml.RenderMethods:          !*hideMethods,
-		goplantuml.RenderAggregations:     *showAggregations,
-		goplantuml.RenderTitle:            *title,
+		goplantuml.RenderConnectionLabels:  *showConnectionLabels,
+		goplantuml.RenderFields:            !*hideFields,
+		goplantuml.RenderMethods:           !*hideMethods,
+		goplantuml.RenderAggregations:      *showAggregations,
+		goplantuml.RenderTitle:             *title,
+		goplantuml.AggregatePrivateMembers: *aggregatePrivateMembers,
 	}
 	if *hideConnections {
 		renderingOptions[goplantuml.RenderAliases] = *showAliases
@@ -179,6 +180,8 @@ func getLegend(ro map[goplantuml.RenderingOption]interface{}) (string, error) {
 			result = fmt.Sprintf("%sRender Implementations: %t\n", result, val.(bool))
 		case goplantuml.RenderMethods:
 			result = fmt.Sprintf("%sRender Methods: %t\n", result, val.(bool))
+		case goplantuml.AggregatePrivateMembers:
+			result = fmt.Sprintf("%sPritave Aggregations: %t\n", result, val.(bool))
 		}
 	}
 	return strings.TrimSpace(result), nil

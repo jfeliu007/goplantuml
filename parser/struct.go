@@ -8,13 +8,14 @@ import (
 //Struct represent a struct in golang, it can be of Type "class" or "interface" and can be associated
 //with other structs via Composition and Extends
 type Struct struct {
-	PackageName  string
-	Functions    []*Function
-	Fields       []*Field
-	Type         string
-	Composition  map[string]struct{}
-	Extends      map[string]struct{}
-	Aggregations map[string]struct{}
+	PackageName         string
+	Functions           []*Function
+	Fields              []*Field
+	Type                string
+	Composition         map[string]struct{}
+	Extends             map[string]struct{}
+	Aggregations        map[string]struct{}
+	PrivateAggregations map[string]struct{}
 }
 
 // ImplementsInterface returns true if the struct st conforms ot the given interface
@@ -68,6 +69,11 @@ func (st *Struct) AddToAggregation(fType string) {
 	st.Aggregations[fType] = struct{}{}
 }
 
+//addToPrivateAggregation adds an aggregation type to the list of aggregations for private members
+func (st *Struct) addToPrivateAggregation(fType string) {
+	st.PrivateAggregations[fType] = struct{}{}
+}
+
 //AddField adds a field into this structure. It parses the ast.Field and extract all
 //needed information
 func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
@@ -83,6 +89,10 @@ func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
 		if unicode.IsUpper(rune(newField.Name[0])) {
 			for _, t := range fundamentalTypes {
 				st.AddToAggregation(replacePackageConstant(t, st.PackageName))
+			}
+		} else {
+			for _, t := range fundamentalTypes {
+				st.addToPrivateAggregation(replacePackageConstant(t, st.PackageName))
 			}
 		}
 	} else if field.Type != nil {

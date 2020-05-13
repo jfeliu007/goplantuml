@@ -10,7 +10,8 @@ func (t *test) test() {
 }
 
 type test struct {
-	field int
+	field  int
+	field2 TestComplicatedAlias
 }
 
 type myInt int

@@ -90,13 +90,14 @@ func TestGetOrCreateStruct(t *testing.T) {
 			st := parser.getOrCreateStruct(tc.nameToLookFor)
 			if tc.expectedEmpty {
 				if !reflect.DeepEqual(st, &Struct{
-					PackageName:  parser.currentPackageName,
-					Functions:    make([]*Function, 0),
-					Fields:       make([]*Field, 0),
-					Type:         "",
-					Composition:  make(map[string]struct{}, 0),
-					Extends:      make(map[string]struct{}, 0),
-					Aggregations: make(map[string]struct{}, 0),
+					PackageName:         parser.currentPackageName,
+					Functions:           make([]*Function, 0),
+					Fields:              make([]*Field, 0),
+					Type:                "",
+					Composition:         make(map[string]struct{}, 0),
+					Extends:             make(map[string]struct{}, 0),
+					Aggregations:        make(map[string]struct{}, 0),
+					PrivateAggregations: make(map[string]struct{}, 0),
 				}) {
 					t.Errorf("Expected resulting structure to be equal to %v, got %v", tc.structure, st)
 				}
@@ -193,6 +194,8 @@ func TestRenderStructures(t *testing.T) {
 	}
 	st := getTestStruct()
 	st.Aggregations = map[string]struct{}{"File": {}}
+	st.PrivateAggregations = map[string]struct{}{"File": {}}
+	st.PrivateAggregations = map[string]struct{}{"File2": {}}
 	structMap = map[string]*Struct{
 		"MainClass": st,
 	}
@@ -203,6 +206,18 @@ func TestRenderStructures(t *testing.T) {
 	})
 	parser.renderStructures("main", structMap, lineB)
 	expectedResult = "namespace main {\n    class MainClass << (S,Aquamarine) >> {\n        - privateField int\n\n        + PublicField error\n\n        - foo( int,  string) (error, int)\n\n        + Boo( string,  int) int\n\n    }\n}\n\"foopack.AnotherClass\" *-- \"main.MainClass\"\n\n\"main.NewClass\" <|-- \"main.MainClass\"\n\n\"main.MainClass\" o-- \"main.File\"\n\n"
+	if lineB.String() != expectedResult {
+		t.Errorf("TestRenderStructures: expected %s, got %s", expectedResult, lineB.String())
+	}
+
+	lineB = &LineStringBuilder{}
+	parser = getEmptyParser("main")
+	parser.SetRenderingOptions(map[RenderingOption]interface{}{
+		RenderAggregations:      true,
+		AggregatePrivateMembers: true,
+	})
+	parser.renderStructures("main", structMap, lineB)
+	expectedResult = "namespace main {\n    class MainClass << (S,Aquamarine) >> {\n        - privateField int\n\n        + PublicField error\n\n        - foo( int,  string) (error, int)\n\n        + Boo( string,  int) int\n\n    }\n}\n\"foopack.AnotherClass\" *-- \"main.MainClass\"\n\n\"main.NewClass\" <|-- \"main.MainClass\"\n\n\"main.MainClass\" o-- \"main.File\"\n\"main.MainClass\" o-- \"main.File2\"\n\n"
 	if lineB.String() != expectedResult {
 		t.Errorf("TestRenderStructures: expected %s, got %s", expectedResult, lineB.String())
 	}
