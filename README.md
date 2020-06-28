@@ -7,6 +7,9 @@
 
 PlantUML Class Diagram Generator for golang projects. Generates class diagram text compatible with plantuml with the information of all structures and interfaces as well as the relationship among them.
 
+## Want to try it on your code? 
+Take a look at [www.dumels.com](https://www.dumels.com). We have created dumels using this library. 
+
 ## Code of Conduct
 Please, review the code of conduct [here](https://github.com/jfeliu007/goplantuml/blob/master/CODE_OF_CONDUCT.md "here").
 
