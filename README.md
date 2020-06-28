@@ -2,6 +2,7 @@
 [![GitHub release](https://img.shields.io/github/release/jfeliu007/goplantuml.svg)](https://github.com/jfeliu007/goplantuml/releases/)
 [![Build Status](https://travis-ci.org/jfeliu007/goplantuml.svg?branch=master)](https://travis-ci.org/jfeliu007/goplantuml)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go) 
+[![DUMELS Diagram](https://www.dumels.com/api/v1/badge/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d)](https://www.dumels.com/diagram/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d) 
 # GoPlantUML
 
 PlantUML Class Diagram Generator for golang projects. Generates class diagram text compatible with plantuml with the information of all structures and interfaces as well as the relationship among them.
@@ -196,5 +197,5 @@ testingsupport.MyStruct3 o-- testingsupport.MyStruct1
 
 ![alt text](https://raw.githubusercontent.com/jfeliu007/goplantuml/master/example/example.png)
 
-### The following diagram is generated based on the file in https://raw.githubusercontent.com/jfeliu007/goplantuml/master/ClassDiagram.puml
-![Alt text](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/jfeliu007/goplantuml/master/ClassDiagram.puml?raw=true "Title")
+### Diagram using www.dumels.com
+[UML Diagram](https://www.dumels.com/diagram/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d)
