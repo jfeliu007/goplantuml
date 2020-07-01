@@ -211,8 +211,15 @@ func (p *ClassParser) parsePackage(node ast.Node) {
 	if !ok {
 		p.structure[p.currentPackageName] = make(map[string]*Struct)
 	}
-	for fileName, f := range pack.Files {
+	var sortedFiles []string
+	for fileName := range pack.Files {
+		sortedFiles = append(sortedFiles, fileName)
+	}
+	sort.Strings(sortedFiles)
+	for _, fileName := range sortedFiles {
+
 		if !strings.HasSuffix(fileName, "_test.go") {
+			f := pack.Files[fileName]
 			for _, d := range f.Imports {
 				p.parseImports(d)
 			}

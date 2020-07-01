@@ -42,6 +42,8 @@ namespace parser {
         - renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) 
         - renderCompositions(structure *Struct, name string, composition *LineStringBuilder) 
         - renderAggregations(structure *Struct, name string, aggregations *LineStringBuilder) 
+        - updatePrivateAggregations(structure *Struct, aggregationsMap <font color=blue>map</font>[string]<font color=blue>struct</font>{}) 
+        - renderAggregationMap(aggregationMap <font color=blue>map</font>[string]<font color=blue>struct</font>{}, structure *Struct, aggregations *LineStringBuilder, name string) 
         - getPackageName(t string, st *Struct) string
         - renderExtends(structure *Struct, name string, extends *LineStringBuilder) 
         - renderStructMethods(structure *Struct, privateMethods *LineStringBuilder, publicMethods *LineStringBuilder) 
@@ -83,6 +85,7 @@ namespace parser {
         + Implementations bool
         + Aliases bool
         + ConnectionLabels bool
+        + AggregatePrivateMembers bool
 
     }
     class Struct << (S,Aquamarine) >> {
@@ -93,6 +96,9 @@ namespace parser {
         + Composition <font color=blue>map</font>[string]<font color=blue>struct</font>{}
         + Extends <font color=blue>map</font>[string]<font color=blue>struct</font>{}
         + Aggregations <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+        + PrivateAggregations <font color=blue>map</font>[string]<font color=blue>struct</font>{}
+
+        - addToPrivateAggregation(fType string) 
 
         + ImplementsInterface(inter *Struct) bool
         + AddToComposition(fType string) 
