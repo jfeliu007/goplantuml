@@ -438,7 +438,13 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 			structure := structures[name]
 			p.renderStructure(structure, pack, name, str, composition, extends, aggregations)
 		}
-		for tempName, name := range p.allRenamedStructs[pack] {
+		var orderedRenamedStructs []string
+		for tempName := range p.allRenamedStructs[pack] {
+			orderedRenamedStructs = append(orderedRenamedStructs, tempName)
+		}
+		sort.Strings(orderedRenamedStructs)
+		for _, tempName := range orderedRenamedStructs {
+			name := p.allRenamedStructs[pack][tempName]
 			str.WriteLineWithDepth(1, fmt.Sprintf(`class "%s" as %s {`, name, tempName))
 			str.WriteLineWithDepth(2, aliasComplexNameComment)
 			str.WriteLineWithDepth(1, "}")
