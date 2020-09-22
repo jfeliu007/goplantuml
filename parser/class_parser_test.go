@@ -988,3 +988,15 @@ func TestGenerateRenamedStructName(t *testing.T) {
 		t.Errorf("TestGenerateRenamedStructName: Expected result to be abcd, got %s", generatedName)
 	}
 }
+
+func TestClassParser_handleFuncDecl(t *testing.T) {
+	p := &ClassParser{}
+	p.handleFuncDecl(&ast.FuncDecl{
+		Recv: &ast.FieldList{
+			List: nil,
+		},
+	})
+	if len(p.allStructs) != 0 {
+		t.Error("expecting no structs to be created")
+	}
+}

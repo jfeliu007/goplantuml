@@ -263,6 +263,10 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 func (p *ClassParser) handleFuncDecl(decl *ast.FuncDecl) {
 
 	if decl.Recv != nil {
+		if decl.Recv.List == nil {
+			return
+		}
+
 		// Only get in when the function is defined for a structure. Global functions are not needed for class diagram
 		theType, _ := getFieldType(decl.Recv.List[0].Type, p.allImports)
 		theType = replacePackageConstant(theType, "")
