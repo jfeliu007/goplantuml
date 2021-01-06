@@ -318,57 +318,62 @@ func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 		return
 	}
 	for _, spec := range decl.Specs {
-		var typeName string
-		var alias *Alias
-		declarationType := "alias"
-		switch v := spec.(type) {
-		case *ast.TypeSpec:
-			typeName = v.Name.Name
-			switch c := v.Type.(type) {
-			case *ast.StructType:
-				declarationType = "class"
-				handleGenDecStructType(p, typeName, c)
-			case *ast.InterfaceType:
-				declarationType = "interface"
-				handleGenDecInterfaceType(p, typeName, c)
-			default:
-				basicType, _ := getFieldType(getBasicType(c), p.allImports)
+		p.processSpec(spec)
+	}
+}
 
-				aliasType, _ := getFieldType(c, p.allImports)
-				aliasType = replacePackageConstant(aliasType, "")
-				if !isPrimitiveString(typeName) {
-					typeName = fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
-				}
-				packageName := p.currentPackageName
-				if isPrimitiveString(basicType) {
-					packageName = builtinPackageName
-				}
-				alias = getNewAlias(fmt.Sprintf("%s.%s", packageName, aliasType), p.currentPackageName, typeName)
-
-			}
+func (p *ClassParser) processSpec(spec ast.Spec) {
+	var typeName string
+	var alias *Alias
+	declarationType := "alias"
+	switch v := spec.(type) {
+	case *ast.TypeSpec:
+		typeName = v.Name.Name
+		switch c := v.Type.(type) {
+		case *ast.StructType:
+			declarationType = "class"
+			handleGenDecStructType(p, typeName, c)
+		case *ast.InterfaceType:
+			declarationType = "interface"
+			handleGenDecInterfaceType(p, typeName, c)
 		default:
-			// Not needed for class diagrams (Imports, global variables, regular functions, etc)
-			return
-		}
-		p.getOrCreateStruct(typeName).Type = declarationType
-		fullName := fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
-		switch declarationType {
-		case "interface":
-			p.allInterfaces[fullName] = struct{}{}
-		case "class":
-			p.allStructs[fullName] = struct{}{}
-		case "alias":
-			p.allAliases[typeName] = alias
-			if strings.Count(alias.Name, ".") > 1 {
-				pack := strings.SplitN(alias.Name, ".", 2)
-				if _, ok := p.allRenamedStructs[pack[0]]; !ok {
-					p.allRenamedStructs[pack[0]] = map[string]string{}
-				}
-				renamedClass := generateRenamedStructName(pack[1])
-				p.allRenamedStructs[pack[0]][renamedClass] = pack[1]
+			basicType, _ := getFieldType(getBasicType(c), p.allImports)
+
+			aliasType, _ := getFieldType(c, p.allImports)
+			aliasType = replacePackageConstant(aliasType, "")
+			if !isPrimitiveString(typeName) {
+				typeName = fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
 			}
+			packageName := p.currentPackageName
+			if isPrimitiveString(basicType) {
+				packageName = builtinPackageName
+			}
+			alias = getNewAlias(fmt.Sprintf("%s.%s", packageName, aliasType), p.currentPackageName, typeName)
+
+		}
+	default:
+		// Not needed for class diagrams (Imports, global variables, regular functions, etc)
+		return
+	}
+	p.getOrCreateStruct(typeName).Type = declarationType
+	fullName := fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
+	switch declarationType {
+	case "interface":
+		p.allInterfaces[fullName] = struct{}{}
+	case "class":
+		p.allStructs[fullName] = struct{}{}
+	case "alias":
+		p.allAliases[typeName] = alias
+		if strings.Count(alias.Name, ".") > 1 {
+			pack := strings.SplitN(alias.Name, ".", 2)
+			if _, ok := p.allRenamedStructs[pack[0]]; !ok {
+				p.allRenamedStructs[pack[0]] = map[string]string{}
+			}
+			renamedClass := generateRenamedStructName(pack[1])
+			p.allRenamedStructs[pack[0]][renamedClass] = pack[1]
 		}
 	}
+	return
 }
 
 // If this element is an array or a pointer, this function will return the type that is closer to these
