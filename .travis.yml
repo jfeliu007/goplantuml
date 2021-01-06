@@ -3,6 +3,8 @@ language: go
 go:
   - 1.10.x
   - 1.11.x
+codecov:
+  - token: a4e804b0-060a-4817-b046-76bfb032128a
 
 before_install:
   - go get -t -v ./...
