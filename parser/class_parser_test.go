@@ -1002,7 +1002,7 @@ func TestClassParser_handleFuncDecl(t *testing.T) {
 }
 
 func TestParametrizedTypeDeclarations(t *testing.T) {
-	parser, err := NewClassDiagram([]string{"../testingsupport/parenthesized_type_declarations"}, []string{}, false)
+	parser, err := NewClassDiagram([]string{"../testingsupport/parenthesizedtypedeclarations"}, []string{}, false)
 	if err != nil {
 		t.Errorf("TestConnectionLabelsRendering: expected no error but got %s", err.Error())
 		return
@@ -1010,7 +1010,7 @@ func TestParametrizedTypeDeclarations(t *testing.T) {
 	parser.SetRenderingOptions(map[RenderingOption]interface{}{})
 	result := parser.Render()
 	expectedResult := `@startuml
-namespace parenthesized_type_declarations {
+namespace parenthesizedtypedeclarations {
     interface Bar  {
         + Bar() 
 
