@@ -67,6 +67,8 @@ Usage of goplantuml:
         Show a note in the diagram with the none evident options ran with this CLI
   -title string
         Title of the generated diagram
+  -hide-private-members
+        Hides all private members (fields and methods)
 ```
 
 #### Example

@@ -13,7 +13,7 @@ import (
 	goplantuml "github.com/jfeliu007/goplantuml/parser"
 )
 
-//RenderingOptionSlice will implements the sort interface
+// RenderingOptionSlice will implements the sort interface
 type RenderingOptionSlice []goplantuml.RenderingOption
 
 // Len is the number of elements in the collection.
@@ -48,6 +48,7 @@ func main() {
 	output := flag.String("output", "", "output file path. If omitted, then this will default to standard output")
 	showOptionsAsNote := flag.Bool("show-options-as-note", false, "Show a note in the diagram with the none evident options ran with this CLI")
 	aggregatePrivateMembers := flag.Bool("aggregate-private-members", false, "Show aggregations for private members. Ignored if -show-aggregations is not used.")
+	hidePrivateMembers := flag.Bool("hide-private-members", false, "Hide private fields and methods")
 	flag.Parse()
 	renderingOptions := map[goplantuml.RenderingOption]interface{}{
 		goplantuml.RenderConnectionLabels:  *showConnectionLabels,
@@ -56,6 +57,7 @@ func main() {
 		goplantuml.RenderAggregations:      *showAggregations,
 		goplantuml.RenderTitle:             *title,
 		goplantuml.AggregatePrivateMembers: *aggregatePrivateMembers,
+		goplantuml.RenderPrivateMembers:    !*hidePrivateMembers,
 	}
 	if *hideConnections {
 		renderingOptions[goplantuml.RenderAliases] = *showAliases
