@@ -1000,3 +1000,32 @@ func TestClassParser_handleFuncDecl(t *testing.T) {
 		t.Error("expecting no structs to be created")
 	}
 }
+
+func TestParametrizedTypeDeclarations(t *testing.T) {
+	parser, err := NewClassDiagram([]string{"../testingsupport/parenthesizedtypedeclarations"}, []string{}, false)
+	if err != nil {
+		t.Errorf("TestConnectionLabelsRendering: expected no error but got %s", err.Error())
+		return
+	}
+	parser.SetRenderingOptions(map[RenderingOption]interface{}{})
+	result := parser.Render()
+	expectedResult := `@startuml
+namespace parenthesizedtypedeclarations {
+    interface Bar  {
+        + Bar() 
+
+    }
+    interface Foo  {
+        + Foo() 
+
+    }
+}
+
+
+@enduml
+`
+	if result != expectedResult {
+		t.Errorf("TestConnectionLabelsRendering: expecting \n%s\n got \n%s\n", expectedResult, result)
+	}
+
+}

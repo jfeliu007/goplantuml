@@ -317,7 +317,12 @@ func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 		//This might be a type of General Declaration we do not know how to handle.
 		return
 	}
-	spec := decl.Specs[0]
+	for _, spec := range decl.Specs {
+		p.processSpec(spec)
+	}
+}
+
+func (p *ClassParser) processSpec(spec ast.Spec) {
 	var typeName string
 	var alias *Alias
 	declarationType := "alias"
@@ -368,6 +373,7 @@ func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 			p.allRenamedStructs[pack[0]][renamedClass] = pack[1]
 		}
 	}
+	return
 }
 
 // If this element is an array or a pointer, this function will return the type that is closer to these
