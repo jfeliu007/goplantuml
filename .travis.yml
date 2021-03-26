@@ -1,16 +1,24 @@
 language: go
 
 go:
-  - 1.10.x
   - 1.11.x
+  - 1.12.x
+  - 1.13.x
+  - 1.14.x
+  - 1.15.x
+  - 1.16.x
+
+env:
+  global: GO111MODULE=on
 
 before_install:
-  - go mod download
+  - go mod vendor
   - go get -u golang.org/x/lint/golint
   - go get github.com/fzipp/gocyclo/cmd/gocyclo
 
 script:
-  - go test ./parser -coverprofile=coverage.txt -covermode=atomic
+  - go test -mod=vendor ./parser -coverprofile=coverage.txt -covermode=atomic
+  - rm -rf vendor/
   - golint -set_exit_status ./...
   - gocyclo -over 15 ./parser
 
