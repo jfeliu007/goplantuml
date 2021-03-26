@@ -13,7 +13,7 @@ env:
 
 before_install:
   - go mod vendor
-  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.38.1
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.38.0
 
 script:
   - go test -mod=vendor ./parser -coverprofile=coverage.txt -covermode=atomic
