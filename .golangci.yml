@@ -1,0 +1,18 @@
+run:
+  deadline: 210s
+  modules-download-mode: vendor
+
+linters:
+  disable-all: true
+  enable:
+    - gofmt
+    - golint
+    - gocyclo
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  gofmt:
+    simplify: true
+  goimports:
+    local-prefixes: github.com/jfeliu007/goplantuml

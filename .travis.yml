@@ -13,14 +13,11 @@ env:
 
 before_install:
   - go mod vendor
-  - go get -u golang.org/x/lint/golint
-  - go get github.com/fzipp/gocyclo/cmd/gocyclo
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.38.1
 
 script:
   - go test -mod=vendor ./parser -coverprofile=coverage.txt -covermode=atomic
-  - rm -rf vendor/
-  - golint -set_exit_status ./...
-  - gocyclo -over 15 ./parser
+  - golangci-lint run ./...
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
