@@ -29,8 +29,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-//LineStringBuilder extends the strings.Builder and adds functionality to build a string with tabs and
-//adding new lines
+// LineStringBuilder extends the strings.Builder and adds functionality to build a string with tabs and
+// adding new lines
 type LineStringBuilder struct {
 	strings.Builder
 }
@@ -42,14 +42,14 @@ const extends = `"extends"`
 const aggregates = `"uses"`
 const aliasOf = `"alias of"`
 
-//WriteLineWithDepth will write the given text with added tabs at the beginning into the string builder.
+// WriteLineWithDepth will write the given text with added tabs at the beginning into the string builder.
 func (lsb *LineStringBuilder) WriteLineWithDepth(depth int, str string) {
 	lsb.WriteString(strings.Repeat(tab, depth))
 	lsb.WriteString(str)
 	lsb.WriteString("\n")
 }
 
-//ClassDiagramOptions will provide a way for callers of the NewClassDiagramFs() function to pass all the necessary arguments.
+// ClassDiagramOptions will provide a way for callers of the NewClassDiagramFs() function to pass all the necessary arguments.
 type ClassDiagramOptions struct {
 	FileSystem         afero.Fs
 	Directories        []string
@@ -58,7 +58,7 @@ type ClassDiagramOptions struct {
 	Recursive          bool
 }
 
-//RenderingOptions will allow the class parser to optionally enebale or disable the things to render.
+// RenderingOptions will allow the class parser to optionally enebale or disable the things to render.
 type RenderingOptions struct {
 	Title                   string
 	Notes                   string
@@ -70,45 +70,51 @@ type RenderingOptions struct {
 	Aliases                 bool
 	ConnectionLabels        bool
 	AggregatePrivateMembers bool
+	PrivateMembers          bool
 }
 
 const aliasComplexNameComment = "'This class was created so that we can correctly have an alias pointing to this name. Since it contains dots that can break namespaces"
 
-//RenderAggregations is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render aggregations
-const RenderAggregations = 0
+const (
+	// RenderAggregations is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render aggregations
+	RenderAggregations RenderingOption = iota
 
-//RenderCompositions is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render compositions
-const RenderCompositions = 1
+	// RenderCompositions is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render compositions
+	RenderCompositions
 
-//RenderImplementations is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render implementations
-const RenderImplementations = 2
+	// RenderImplementations is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render implementations
+	RenderImplementations
 
-//RenderAliases is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render aliases
-const RenderAliases = 3
+	// RenderAliases is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render aliases
+	RenderAliases
 
-//RenderFields is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render fields
-const RenderFields = 4
+	// RenderFields is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render fields
+	RenderFields
 
-//RenderMethods is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render methods
-const RenderMethods = 5
+	// RenderMethods is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render methods
+	RenderMethods
 
-//RenderConnectionLabels is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render the connection labels
-const RenderConnectionLabels = 6
+	// RenderConnectionLabels is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will set the parser to render the connection labels
+	RenderConnectionLabels
 
-//RenderTitle is the options for the Title of the diagram. The value of this will be rendered as a title unless empty
-const RenderTitle = 7
+	// RenderTitle is the options for the Title of the diagram. The value of this will be rendered as a title unless empty
+	RenderTitle
 
-//RenderNotes contains a list of notes to be rendered in the class diagram
-const RenderNotes = 8
+	// RenderNotes contains a list of notes to be rendered in the class diagram
+	RenderNotes
 
-//AggregatePrivateMembers is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will connect aggregations with private members
-const AggregatePrivateMembers = 9
+	// AggregatePrivateMembers is to be used in the SetRenderingOptions argument as the key to the map, when value is true, it will connect aggregations with private members
+	AggregatePrivateMembers
 
-//RenderingOption is an alias for an it so it is easier to use it as options in a map (see SetRenderingOptions(map[RenderingOption]bool) error)
+	// RenderPrivateMembers is used if private members (fields, methods) should be rendered
+	RenderPrivateMembers
+)
+
+// RenderingOption is an alias for an it so it is easier to use it as options in a map (see SetRenderingOptions(map[RenderingOption]bool) error)
 type RenderingOption int
 
-//ClassParser contains the structure of the parsed files. The structure is a map of package_names that contains
-//a map of structure_names -> Structs
+// ClassParser contains the structure of the parsed files. The structure is a map of package_names that contains
+// a map of structure_names -> Structs
 type ClassParser struct {
 	renderingOptions   *RenderingOptions
 	structure          map[string]map[string]*Struct
@@ -120,7 +126,7 @@ type ClassParser struct {
 	allRenamedStructs  map[string]map[string]string
 }
 
-//NewClassDiagramWithOptions returns a new classParser with which can Render the class diagram of
+// NewClassDiagramWithOptions returns a new classParser with which can Render the class diagram of
 // files in the given directory passed in the ClassDiargamOptions. This will also alow for different types of FileSystems
 // Passed since it is part of the ClassDiagramOptions as well.
 func NewClassDiagramWithOptions(options *ClassDiagramOptions) (*ClassParser, error) {
@@ -190,7 +196,7 @@ func NewClassDiagramWithOptions(options *ClassDiagramOptions) (*ClassParser, err
 	return classParser, nil
 }
 
-//NewClassDiagram returns a new classParser with which can Render the class diagram of
+// NewClassDiagram returns a new classParser with which can Render the class diagram of
 // files in the given directory
 func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recursive bool) (*ClassParser, error) {
 	options := &ClassDiagramOptions{
@@ -203,7 +209,7 @@ func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recurs
 	return NewClassDiagramWithOptions(options)
 }
 
-//parse the given ast.Package into the ClassParser structure
+// parse the given ast.Package into the ClassParser structure
 func (p *ClassParser) parsePackage(node ast.Node) {
 	pack := node.(*ast.Package)
 	p.currentPackageName = pack.Name
@@ -250,7 +256,7 @@ func (p *ClassParser) parseDirectory(directoryPath string) error {
 	return nil
 }
 
-//parse the given declaration looking for classes, interfaces, or member functions
+// parse the given declaration looking for classes, interfaces, or member functions
 func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 	switch decl := node.(type) {
 	case *ast.GenDecl:
@@ -314,7 +320,7 @@ func handleGenDecInterfaceType(p *ClassParser, typeName string, c *ast.Interface
 
 func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
 	if decl.Specs == nil || len(decl.Specs) < 1 {
-		//This might be a type of General Declaration we do not know how to handle.
+		// This might be a type of General Declaration we do not know how to handle.
 		return
 	}
 	for _, spec := range decl.Specs {
@@ -394,7 +400,7 @@ func getBasicType(theType ast.Expr) ast.Expr {
 	return theType
 }
 
-//Render returns a string of the class diagram that this parser has generated.
+// Render returns a string of the class diagram that this parser has generated.
 func (p *ClassParser) Render() string {
 	str := &LineStringBuilder{}
 	str.WriteLineWithDepth(0, "@startuml")
@@ -626,6 +632,10 @@ func (p *ClassParser) renderStructMethods(structure *Struct, privateMethods *Lin
 	for _, method := range structure.Functions {
 		accessModifier := "+"
 		if unicode.IsLower(rune(method.Name[0])) {
+			if !p.renderingOptions.PrivateMembers {
+				continue
+			}
+
 			accessModifier = "-"
 		}
 		parameterList := make([]string, 0)
@@ -652,6 +662,10 @@ func (p *ClassParser) renderStructFields(structure *Struct, privateFields *LineS
 	for _, field := range structure.Fields {
 		accessModifier := "+"
 		if unicode.IsLower(rune(field.Name[0])) {
+			if !p.renderingOptions.PrivateMembers {
+				continue
+			}
+
 			accessModifier = "-"
 		}
 		if accessModifier == "-" {
@@ -691,7 +705,7 @@ func (p *ClassParser) getStruct(structName string) *Struct {
 	return pack[split[1]]
 }
 
-//SetRenderingOptions Sets the rendering options for the Render() Function
+// SetRenderingOptions Sets the rendering options for the Render() Function
 func (p *ClassParser) SetRenderingOptions(ro map[RenderingOption]interface{}) error {
 	for option, val := range ro {
 		switch option {
@@ -715,6 +729,8 @@ func (p *ClassParser) SetRenderingOptions(ro map[RenderingOption]interface{}) er
 			p.renderingOptions.Notes = val.(string)
 		case AggregatePrivateMembers:
 			p.renderingOptions.AggregatePrivateMembers = val.(bool)
+		case RenderPrivateMembers:
+			p.renderingOptions.PrivateMembers = val.(bool)
 		default:
 			return fmt.Errorf("Invalid Rendering option %v", option)
 		}
