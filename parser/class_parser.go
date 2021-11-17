@@ -239,7 +239,7 @@ func (p *ClassParser) parsePackage(node ast.Node) {
 func (p *ClassParser) parseImports(impt *ast.ImportSpec) {
 	if impt.Name != nil {
 		splitPath := strings.Split(impt.Path.Value, "/")
-		s := strings.TrimRight(splitPath[len(splitPath)-1], `"`)
+		s := strings.Trim(splitPath[len(splitPath)-1], `"`)
 		p.allImports[impt.Name.Name] = s
 	}
 }
