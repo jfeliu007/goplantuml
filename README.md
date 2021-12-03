@@ -1,14 +1,14 @@
 [![godoc reference](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/jfeliu007/goplantuml/parser) [![Go Report Card](https://goreportcard.com/badge/github.com/jfeliu007/goplantuml)](https://goreportcard.com/report/github.com/jfeliu007/goplantuml) [![codecov](https://codecov.io/gh/jfeliu007/goplantuml/branch/master/graph/badge.svg)](https://codecov.io/gh/jfeliu007/goplantuml) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/release/jfeliu007/goplantuml.svg)](https://github.com/jfeliu007/goplantuml/releases/)
 [![Build Status](https://travis-ci.org/jfeliu007/goplantuml.svg?branch=master)](https://travis-ci.org/jfeliu007/goplantuml)
-[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go) 
-[![DUMELS Diagram](https://www.dumels.com/api/v1/badge/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d)](https://www.dumels.com/diagram/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d) 
+[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
+[![DUMELS Diagram](https://www.dumels.com/api/v1/badge/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d)](https://www.dumels.com/diagram/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d)
 # GoPlantUML
 
 PlantUML Class Diagram Generator for golang projects. Generates class diagram text compatible with plantuml with the information of all structures and interfaces as well as the relationship among them.
 
-## Want to try it on your code? 
-Take a look at [www.dumels.com](https://www.dumels.com). We have created dumels using this library. 
+## Want to try it on your code?
+Take a look at [www.dumels.com](https://www.dumels.com). We have created dumels using this library.
 
 ## Code of Conduct
 Please, review the code of conduct [here](https://github.com/jfeliu007/goplantuml/blob/master/CODE_OF_CONDUCT.md "here").
@@ -19,10 +19,7 @@ golang 1.10 or above
 ### Installing
 
 ```
-go get github.com/jfeliu007/goplantuml/parser
-go get github.com/jfeliu007/goplantuml/cmd/goplantuml
-cd $GOPATH/src/github.com/jfeliu007/goplantuml
-go install ./...
+go install github.com/jfeliu007/goplantuml/cmd/goplantuml@latest
 ```
 
 This will install the command goplantuml in your GOPATH bin folder.
@@ -89,7 +86,7 @@ namespace parser {
 
     }
     class LineStringBuilder {
-        + WriteLineWithDepth(depth int, str string) 
+        + WriteLineWithDepth(depth int, str string)
 
     }
     class ClassParser {
@@ -98,19 +95,19 @@ namespace parser {
         - allInterfaces <font color=blue>map</font>[string]<font color=blue>struct</font>{}
         - allStructs <font color=blue>map</font>[string]<font color=blue>struct</font>{}
 
-        - structImplementsInterface(st *Struct, inter *Struct) 
-        - parsePackage(node ast.Node) 
-        - parseFileDeclarations(node ast.Decl) 
-        - addMethodToStruct(s *Struct, method *ast.Field) 
-        - getFunction(f *ast.FuncType, name string) 
-        - addFieldToStruct(s *Struct, field *ast.Field) 
-        - addToComposition(s *Struct, fType string) 
-        - addToExtends(s *Struct, fType string) 
-        - getOrCreateStruct(name string) 
-        - getStruct(structName string) 
-        - getFieldType(exp ast.Expr, includePackageName bool) 
+        - structImplementsInterface(st *Struct, inter *Struct)
+        - parsePackage(node ast.Node)
+        - parseFileDeclarations(node ast.Decl)
+        - addMethodToStruct(s *Struct, method *ast.Field)
+        - getFunction(f *ast.FuncType, name string)
+        - addFieldToStruct(s *Struct, field *ast.Field)
+        - addToComposition(s *Struct, fType string)
+        - addToExtends(s *Struct, fType string)
+        - getOrCreateStruct(name string)
+        - getStruct(structName string)
+        - getFieldType(exp ast.Expr, includePackageName bool)
 
-        + Render() 
+        + Render()
 
     }
     class Parameter {
@@ -185,7 +182,7 @@ namespace testingsupport {
     class MyStruct2 << (S,Aquamarine) >> {
     }
     class MyStruct3 << (S,Aquamarine) >> {
-        - foo() 
+        - foo()
 
         + Foo MyStruct1
 
