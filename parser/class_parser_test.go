@@ -907,8 +907,8 @@ hide methods
 @enduml
 `,
 		}, {
-			Name:        "Hide Private Members",
-			InputFolder: "../testingsupport/renderingoptions",
+			Name:             "Hide Private Members",
+			InputFolder:      "../testingsupport/renderingoptions",
 			RenderingOptions: map[RenderingOption]interface{}{},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -1051,6 +1051,30 @@ namespace parenthesizedtypedeclarations {
 `
 	if result != expectedResult {
 		t.Errorf("TestConnectionLabelsRendering: expecting \n%s\n got \n%s\n", expectedResult, result)
+	}
+
+}
+
+func TestNamedImportsInAnonymousFields(t *testing.T) {
+	parser, err := NewClassDiagram([]string{"../testingsupport/namedimports"}, []string{}, false)
+	if err != nil {
+		t.Errorf("TestNamedImportsInAnonymousFields: expected no error but got %s", err.Error())
+		return
+	}
+	parser.SetRenderingOptions(map[RenderingOption]interface{}{})
+	result := parser.Render()
+	expectedResult := `@startuml
+namespace namedimports {
+    class MyType << (S,Aquamarine) >> {
+    }
+}
+"time.Duration" *-- "namedimports.MyType"
+
+
+@enduml
+`
+	if result != expectedResult {
+		t.Errorf("TestNamedImportsInAnonymousFields: expecting \n%s\n got \n%s\n", expectedResult, result)
 	}
 
 }
