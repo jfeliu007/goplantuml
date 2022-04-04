@@ -6,7 +6,7 @@ on:
 
 jobs:
 
-  build:
+  Automated-test-and-code-analisys:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -24,6 +24,9 @@ jobs:
 
       - name: Get Go Cyclo
         run: go get github.com/fzipp/gocyclo/cmd/gocyclo
+
+      -name: Go Mod Tidy
+        run: go mod tidy
 
       - name: Build
         run: go build -v ./parser
