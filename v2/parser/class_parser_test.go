@@ -472,7 +472,7 @@ func TestNewClassDiagram(t *testing.T) {
 		{
 			Name:          "Recursive",
 			ExpectedError: "",
-			Path:          "../testingsupport",
+			Path:          "../../testingsupport",
 			Recursive:     true,
 			ExpectedStructs: []struct {
 				Name   string
@@ -494,7 +494,7 @@ func TestNewClassDiagram(t *testing.T) {
 		{
 			Name:          "Not Recursive",
 			ExpectedError: "",
-			Path:          "../testingsupport",
+			Path:          "../../testingsupport",
 			Recursive:     false,
 			ExpectedStructs: []struct {
 				Name   string
@@ -551,7 +551,7 @@ func TestNewClassDiagram(t *testing.T) {
 
 func TestRender(t *testing.T) {
 
-	parser, err := NewClassDiagram([]string{"../testingsupport"}, []string{}, false)
+	parser, err := NewClassDiagram([]string{"../../testingsupport"}, []string{}, false)
 	if err != nil {
 		t.Errorf("TestRender: expected no errors, got %s", err.Error())
 		return
@@ -563,7 +563,7 @@ func TestRender(t *testing.T) {
 	})
 
 	resultRender := parser.Render()
-	result, err := ioutil.ReadFile("../testingsupport/testingsupport.puml")
+	result, err := ioutil.ReadFile("../../testingsupport/testingsupport.puml")
 	if err != nil {
 		t.Errorf("TestRender: expected no errors reading testing file, got %s", err.Error())
 	}
@@ -584,7 +584,7 @@ func TestGetPackageName(t *testing.T) {
 }
 
 func TestMultipleFolders(t *testing.T) {
-	parser, err := NewClassDiagram([]string{"../testingsupport/subfolder3", "../testingsupport/subfolder2"}, []string{}, false)
+	parser, err := NewClassDiagram([]string{"../../testingsupport/subfolder3", "../../testingsupport/subfolder2"}, []string{}, false)
 
 	if err != nil {
 		t.Errorf("TestMultipleFolders: expected no errors, got %s", err.Error())
@@ -592,7 +592,7 @@ func TestMultipleFolders(t *testing.T) {
 	}
 
 	resultRender := parser.Render()
-	result, err := ioutil.ReadFile("../testingsupport/subfolder1-2.puml")
+	result, err := ioutil.ReadFile("../../testingsupport/subfolder1-2.puml")
 	if err != nil {
 		t.Errorf("TestMultipleFolders: expected no errors reading testing file, got %s", err.Error())
 	}
@@ -603,7 +603,7 @@ func TestMultipleFolders(t *testing.T) {
 
 func TestIgnoreDirectories(t *testing.T) {
 
-	parser, err := NewClassDiagram([]string{"../testingsupport"}, []string{}, true)
+	parser, err := NewClassDiagram([]string{"../../testingsupport"}, []string{}, true)
 	if err != nil {
 		t.Errorf("TestIgnoreDirectories: expected no errors, got %s", err.Error())
 		return
@@ -614,7 +614,7 @@ func TestIgnoreDirectories(t *testing.T) {
 		return
 	}
 
-	parser, err = NewClassDiagram([]string{"../testingsupport"}, []string{"../testingsupport/subfolder2"}, true)
+	parser, err = NewClassDiagram([]string{"../../testingsupport"}, []string{"../../testingsupport/subfolder2"}, true)
 
 	if err != nil {
 		t.Errorf("TestIgnoreDirectories: expected no errors, got %s", err.Error())
@@ -709,7 +709,7 @@ func TestSetRenderingOptions(t *testing.T) {
 
 func TestRenderCompositionFromInterfaces(t *testing.T) {
 
-	parser, err := NewClassDiagram([]string{"../testingsupport/subfolder"}, []string{}, false)
+	parser, err := NewClassDiagram([]string{"../../testingsupport/subfolder"}, []string{}, false)
 
 	if err != nil {
 		t.Errorf("TestIgnoreDirectories: expected no errors, got %s", err.Error())
@@ -827,7 +827,7 @@ func TestRenderingOptions(t *testing.T) {
 	}{
 		{
 			Name:        "Show Fields",
-			InputFolder: "../testingsupport/renderingoptions",
+			InputFolder: "../../testingsupport/renderingoptions",
 			RenderingOptions: map[RenderingOption]interface{}{
 				RenderPrivateMembers: true,
 			},
@@ -846,7 +846,7 @@ namespace renderingoptions {
 `,
 		}, {
 			Name:        "Hide Fields",
-			InputFolder: "../testingsupport/renderingoptions",
+			InputFolder: "../../testingsupport/renderingoptions",
 			RenderingOptions: map[RenderingOption]interface{}{
 				RenderFields:         false,
 				RenderPrivateMembers: true,
@@ -868,7 +868,7 @@ hide fields
 		},
 		{
 			Name:        "Show Methods",
-			InputFolder: "../testingsupport/renderingoptions",
+			InputFolder: "../../testingsupport/renderingoptions",
 			RenderingOptions: map[RenderingOption]interface{}{
 				RenderPrivateMembers: true,
 			},
@@ -887,7 +887,7 @@ namespace renderingoptions {
 `,
 		}, {
 			Name:        "Hide Methods",
-			InputFolder: "../testingsupport/renderingoptions",
+			InputFolder: "../../testingsupport/renderingoptions",
 			RenderingOptions: map[RenderingOption]interface{}{
 				RenderMethods:        false,
 				RenderPrivateMembers: true,
@@ -908,7 +908,7 @@ hide methods
 `,
 		}, {
 			Name:             "Hide Private Members",
-			InputFolder:      "../testingsupport/renderingoptions",
+			InputFolder:      "../../testingsupport/renderingoptions",
 			RenderingOptions: map[RenderingOption]interface{}{},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -951,7 +951,7 @@ func TestHandleGenDecl(t *testing.T) {
 }
 
 func TestConnectionLabelsRendering(t *testing.T) {
-	parser, err := NewClassDiagram([]string{"../testingsupport/connectionlabels"}, []string{}, false)
+	parser, err := NewClassDiagram([]string{"../../testingsupport/connectionlabels"}, []string{}, false)
 	if err != nil {
 		t.Errorf("TestConnectionLabelsRendering: expected no error but got %s", err.Error())
 		return
@@ -1027,7 +1027,7 @@ func TestClassParser_handleFuncDecl(t *testing.T) {
 }
 
 func TestParametrizedTypeDeclarations(t *testing.T) {
-	parser, err := NewClassDiagram([]string{"../testingsupport/parenthesizedtypedeclarations"}, []string{}, false)
+	parser, err := NewClassDiagram([]string{"../../testingsupport/parenthesizedtypedeclarations"}, []string{}, false)
 	if err != nil {
 		t.Errorf("TestConnectionLabelsRendering: expected no error but got %s", err.Error())
 		return
@@ -1056,7 +1056,7 @@ namespace parenthesizedtypedeclarations {
 }
 
 func TestNamedImportsInAnonymousFields(t *testing.T) {
-	parser, err := NewClassDiagram([]string{"../testingsupport/namedimports"}, []string{}, false)
+	parser, err := NewClassDiagram([]string{"../../testingsupport/namedimports"}, []string{}, false)
 	if err != nil {
 		t.Errorf("TestNamedImportsInAnonymousFields: expected no error but got %s", err.Error())
 		return

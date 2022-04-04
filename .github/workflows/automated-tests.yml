@@ -29,16 +29,16 @@ jobs:
         run: go mod tidy
 
       - name: Build
-        run: go build -v ./parser
+        run: go build -v ./v2/parser
 
       - name: Test
-        run: go test ./parser -coverprofile=coverage.txt -covermode=atomic
+        run: go test ./v2/parser -coverprofile=coverage.txt -covermode=atomic
 
       - name: Coverage
         run: bash <(curl -s https://codecov.io/bash)
 
       - name: Check for Cyclomatic complexity
-        run: gocyclo -over 15 ./parser
+        run: gocyclo -over 15 ./v2/parser
 
       - name: Check for lint problems
-        run: golint -set_exit_status ./parser
+        run: golint -set_exit_status ./v2/parser
