@@ -41,4 +41,4 @@ jobs:
         run: gocyclo -over 15 ./parser
 
       - name: Check for lint problems
-        run: golint -set_exit_status ./...
+        run: golint -set_exit_status ./parser
