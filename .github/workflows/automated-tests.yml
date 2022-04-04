@@ -2,7 +2,7 @@ name: Go
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
 
@@ -26,4 +26,4 @@ jobs:
         run: go test ./parser -coverprofile=coverage.txt -covermode=atomic
 
       - name: Coverage
-        run: bash <(curl -s https://codecov.io/bash) 
+        run: bash <(curl -s https://codecov.io/bash)
