@@ -16,8 +16,14 @@ jobs:
         with:
           go-version: 1.16
 
-      - name: Mod install
+      - name: Get
         run: go get -t -v ./...
+
+      - name: Get lint
+        run: go get -u golang.org/x/lint/golint
+
+      - name: Get Go Cyclo
+        run: go get github.com/fzipp/gocyclo/cmd/gocyclo
 
       - name: Build
         run: go build -v ./parser
@@ -26,4 +32,10 @@ jobs:
         run: go test ./parser -coverprofile=coverage.txt -covermode=atomic
 
       - name: Coverage
-        run: bash <(curl -s https://codecov.io/bash) 
+        run: bash <(curl -s https://codecov.io/bash)
+
+      - name: Check for Cyclomatic complexity
+        run: gocyclo -over 15 ./parser
+
+      -name: Check for lint problems
+      run: golint -set_exit_status ./...
