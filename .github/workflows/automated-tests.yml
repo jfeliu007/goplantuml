@@ -25,7 +25,7 @@ jobs:
       - name: Get Go Cyclo
         run: go get github.com/fzipp/gocyclo/cmd/gocyclo
 
-      -name: Go Mod Tidy
+      - name: Go Mod Tidy
         run: go mod tidy
 
       - name: Build
