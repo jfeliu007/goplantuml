@@ -37,6 +37,7 @@ namespace parser {
         - parseFileDeclarations(node ast.Decl) 
         - handleFuncDecl(decl *ast.FuncDecl) 
         - handleGenDecl(decl *ast.GenDecl) 
+        - processSpec(spec ast.Spec) 
         - renderStructures(pack string, structures <font color=blue>map</font>[string]*Struct, str *LineStringBuilder) 
         - renderAliases(str *LineStringBuilder) 
         - renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) 
@@ -86,6 +87,7 @@ namespace parser {
         + Aliases bool
         + ConnectionLabels bool
         + AggregatePrivateMembers bool
+        + PrivateMembers bool
 
     }
     class Struct << (S,Aquamarine) >> {
