@@ -5,13 +5,14 @@ import (
 	"unicode"
 )
 
-//Struct represent a struct in golang, it can be of Type "class" or "interface" and can be associated
-//with other structs via Composition and Extends
+// Struct represent a struct in golang, it can be of Type "class" or "interface" and can be associated
+// with other structs via Composition and Extends
 type Struct struct {
 	PackageName         string
 	Functions           []*Function
 	Fields              []*Field
 	Type                string
+	Generics            *Generic
 	Composition         map[string]struct{}
 	Extends             map[string]struct{}
 	Aggregations        map[string]struct{}
@@ -38,9 +39,9 @@ func (st *Struct) ImplementsInterface(inter *Struct) bool {
 	return true
 }
 
-//AddToComposition adds the composition relation to the structure. We want to make sure that *ExampleStruct
-//gets added as ExampleStruct so that we can properly build the relation later to the
-//class identifier
+// AddToComposition adds the composition relation to the structure. We want to make sure that *ExampleStruct
+// gets added as ExampleStruct so that we can properly build the relation later to the
+// class identifier
 func (st *Struct) AddToComposition(fType string) {
 	if len(fType) == 0 {
 		return
@@ -51,9 +52,9 @@ func (st *Struct) AddToComposition(fType string) {
 	st.Composition[fType] = struct{}{}
 }
 
-//AddToExtends Adds an extends relationship to this struct. We want to make sure that *ExampleStruct
-//gets added as ExampleStruct so that we can properly build the relation later to the
-//class identifier
+// AddToExtends Adds an extends relationship to this struct. We want to make sure that *ExampleStruct
+// gets added as ExampleStruct so that we can properly build the relation later to the
+// class identifier
 func (st *Struct) AddToExtends(fType string) {
 	if len(fType) == 0 {
 		return
@@ -64,18 +65,18 @@ func (st *Struct) AddToExtends(fType string) {
 	st.Extends[fType] = struct{}{}
 }
 
-//AddToAggregation adds an aggregation type to the list of aggregations
+// AddToAggregation adds an aggregation type to the list of aggregations
 func (st *Struct) AddToAggregation(fType string) {
 	st.Aggregations[fType] = struct{}{}
 }
 
-//addToPrivateAggregation adds an aggregation type to the list of aggregations for private members
+// addToPrivateAggregation adds an aggregation type to the list of aggregations for private members
 func (st *Struct) addToPrivateAggregation(fType string) {
 	st.PrivateAggregations[fType] = struct{}{}
 }
 
-//AddField adds a field into this structure. It parses the ast.Field and extract all
-//needed information
+// AddField adds a field into this structure. It parses the ast.Field and extract all
+// needed information
 func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
 	theType, fundamentalTypes := getFieldType(field.Type, aliases)
 	theType = replacePackageConstant(theType, "")
@@ -103,7 +104,11 @@ func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
 	}
 }
 
-//AddMethod Parse the Field and if it is an ast.FuncType, then add the methods into the structure
+func (st *Struct) AddTypeParam(field *ast.Field) {
+	st.Generics.getNames(field).getTypes(field)
+}
+
+// AddMethod Parse the Field and if it is an ast.FuncType, then add the methods into the structure
 func (st *Struct) AddMethod(method *ast.Field, aliases map[string]string) {
 	f, ok := method.Type.(*ast.FuncType)
 	if !ok {

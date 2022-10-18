@@ -326,7 +326,6 @@ func TestAddToExtension(t *testing.T) {
 }
 
 func arrayContains(a map[string]struct{}, text string) bool {
-
 	found := false
 	for v := range a {
 		if v == text {
