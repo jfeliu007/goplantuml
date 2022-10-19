@@ -220,17 +220,19 @@ func (p *ClassParser) parsePackage(node ast.Node) {
 	for fileName := range pack.Files {
 		sortedFiles = append(sortedFiles, fileName)
 	}
+
 	sort.Strings(sortedFiles)
 	for _, fileName := range sortedFiles {
+		if strings.HasSuffix(fileName, "_test.go") {
+			continue
+		}
 
-		if !strings.HasSuffix(fileName, "_test.go") {
-			f := pack.Files[fileName]
-			for _, d := range f.Imports {
-				p.parseImports(d)
-			}
-			for _, d := range f.Decls {
-				p.parseFileDeclarations(d)
-			}
+		f := pack.Files[fileName]
+		for _, d := range f.Imports {
+			p.parseImports(d)
+		}
+		for _, d := range f.Decls {
+			p.parseFileDeclarations(d)
 		}
 	}
 }
