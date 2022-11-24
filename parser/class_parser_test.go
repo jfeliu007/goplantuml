@@ -423,6 +423,7 @@ func getEmptyParser(packageName string) *ClassParser {
 			Compositions:    true,
 			Implementations: true,
 			Aliases:         true,
+			PrivateMembers:  true,
 		},
 		currentPackageName: packageName,
 		structure:          make(map[string]map[string]*Struct),
@@ -556,8 +557,9 @@ func TestRender(t *testing.T) {
 		return
 	}
 	parser.SetRenderingOptions(map[RenderingOption]interface{}{
-		RenderTitle: "Test Title",
-		RenderNotes: "Notes Example 1\nNotes Example 1 continues\nNotes Example 2",
+		RenderTitle:          "Test Title",
+		RenderNotes:          "Notes Example 1\nNotes Example 1 continues\nNotes Example 2",
+		RenderPrivateMembers: true,
 	})
 
 	resultRender := parser.Render()
@@ -668,6 +670,7 @@ func TestSetRenderingOptions(t *testing.T) {
 		Compositions:    true,
 		Implementations: true,
 		Aliases:         true,
+		PrivateMembers:  true,
 	}
 	if !reflect.DeepEqual(parser.renderingOptions, emptyRenderingOptions) {
 		t.Errorf("TestRenderingOptions: expected renderingOptions to be %v got %v", emptyRenderingOptions, parser.renderingOptions)
@@ -680,6 +683,7 @@ func TestSetRenderingOptions(t *testing.T) {
 		Fields:           true,
 		Aliases:          false,
 		ConnectionLabels: true,
+		PrivateMembers:   false,
 	}
 	parser.SetRenderingOptions(map[RenderingOption]interface{}{
 		RenderAggregations:     true,
@@ -689,6 +693,7 @@ func TestSetRenderingOptions(t *testing.T) {
 		RenderFields:           true,
 		RenderAliases:          false,
 		RenderConnectionLabels: true,
+		RenderPrivateMembers:   false,
 	})
 	if !reflect.DeepEqual(parser.renderingOptions, newRenderingOptions) {
 		t.Errorf("TestRenderingOptions: expected renderingOptions to be %v got %v", newRenderingOptions, parser.renderingOptions)
@@ -821,9 +826,11 @@ func TestRenderingOptions(t *testing.T) {
 		ExpectedResult   string
 	}{
 		{
-			Name:             "Show Fields",
-			InputFolder:      "../testingsupport/renderingoptions",
-			RenderingOptions: map[RenderingOption]interface{}{},
+			Name:        "Show Fields",
+			InputFolder: "../testingsupport/renderingoptions",
+			RenderingOptions: map[RenderingOption]interface{}{
+				RenderPrivateMembers: true,
+			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
     class Test << (S,Aquamarine) >> {
@@ -841,7 +848,8 @@ namespace renderingoptions {
 			Name:        "Hide Fields",
 			InputFolder: "../testingsupport/renderingoptions",
 			RenderingOptions: map[RenderingOption]interface{}{
-				RenderFields: false,
+				RenderFields:         false,
+				RenderPrivateMembers: true,
 			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -859,9 +867,11 @@ hide fields
 `,
 		},
 		{
-			Name:             "Show Methods",
-			InputFolder:      "../testingsupport/renderingoptions",
-			RenderingOptions: map[RenderingOption]interface{}{},
+			Name:        "Show Methods",
+			InputFolder: "../testingsupport/renderingoptions",
+			RenderingOptions: map[RenderingOption]interface{}{
+				RenderPrivateMembers: true,
+			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
     class Test << (S,Aquamarine) >> {
@@ -879,7 +889,8 @@ namespace renderingoptions {
 			Name:        "Hide Methods",
 			InputFolder: "../testingsupport/renderingoptions",
 			RenderingOptions: map[RenderingOption]interface{}{
-				RenderMethods: false,
+				RenderMethods:        false,
+				RenderPrivateMembers: true,
 			},
 			ExpectedResult: `@startuml
 namespace renderingoptions {
@@ -893,6 +904,19 @@ namespace renderingoptions {
 
 
 hide methods
+@enduml
+`,
+		}, {
+			Name:             "Hide Private Members",
+			InputFolder:      "../testingsupport/renderingoptions",
+			RenderingOptions: map[RenderingOption]interface{}{},
+			ExpectedResult: `@startuml
+namespace renderingoptions {
+    class Test << (S,Aquamarine) >> {
+    }
+}
+
+
 @enduml
 `,
 		},
@@ -935,6 +959,7 @@ func TestConnectionLabelsRendering(t *testing.T) {
 	parser.SetRenderingOptions(map[RenderingOption]interface{}{
 		RenderConnectionLabels: true,
 		RenderAggregations:     true,
+		RenderPrivateMembers:   true,
 	})
 	result := parser.Render()
 	expectedResult := `@startuml
@@ -1026,6 +1051,30 @@ namespace parenthesizedtypedeclarations {
 `
 	if result != expectedResult {
 		t.Errorf("TestConnectionLabelsRendering: expecting \n%s\n got \n%s\n", expectedResult, result)
+	}
+
+}
+
+func TestNamedImportsInAnonymousFields(t *testing.T) {
+	parser, err := NewClassDiagram([]string{"../testingsupport/namedimports"}, []string{}, false)
+	if err != nil {
+		t.Errorf("TestNamedImportsInAnonymousFields: expected no error but got %s", err.Error())
+		return
+	}
+	parser.SetRenderingOptions(map[RenderingOption]interface{}{})
+	result := parser.Render()
+	expectedResult := `@startuml
+namespace namedimports {
+    class MyType << (S,Aquamarine) >> {
+    }
+}
+"time.Duration" *-- "namedimports.MyType"
+
+
+@enduml
+`
+	if result != expectedResult {
+		t.Errorf("TestNamedImportsInAnonymousFields: expecting \n%s\n got \n%s\n", expectedResult, result)
 	}
 
 }

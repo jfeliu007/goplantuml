@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/jfeliu007/goplantuml.svg?branch=master)](https://travis-ci.org/jfeliu007/goplantuml)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go) 
 [![DUMELS Diagram](https://www.dumels.com/api/v1/badge/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d)](https://www.dumels.com/diagram/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d) 
-# GoPlantUML
+# GoPlantUML V2
 
 PlantUML Class Diagram Generator for golang projects. Generates class diagram text compatible with plantuml with the information of all structures and interfaces as well as the relationship among them.
 
@@ -14,15 +14,13 @@ Take a look at [www.dumels.com](https://www.dumels.com). We have created dumels 
 Please, review the code of conduct [here](https://github.com/jfeliu007/goplantuml/blob/master/CODE_OF_CONDUCT.md "here").
 
 ### Prerequisites
-golang 1.10 or above
+golang 1.17 or above
 
 ### Installing
 
 ```
 go get github.com/jfeliu007/goplantuml/parser
-go get github.com/jfeliu007/goplantuml/cmd/goplantuml
-cd $GOPATH/src/github.com/jfeliu007/goplantuml
-go install ./...
+go install github.com/jfeliu007/goplantuml/cmd/goplantuml@latest
 ```
 
 This will install the command goplantuml in your GOPATH bin folder.
@@ -67,6 +65,8 @@ Usage of goplantuml:
         Show a note in the diagram with the none evident options ran with this CLI
   -title string
         Title of the generated diagram
+  -hide-private-members
+        Hides all private members (fields and methods)
 ```
 
 #### Example

@@ -68,8 +68,15 @@ func getFunction(f *ast.FuncType, name string, aliases map[string]string, packag
 	if results != nil {
 		for _, pa := range results.List {
 			theType, _ := getFieldType(pa.Type, aliases)
-			function.ReturnValues = append(function.ReturnValues, replacePackageConstant(theType, ""))
-			function.FullNameReturnValues = append(function.FullNameReturnValues, replacePackageConstant(theType, packageName))
+			count := 1
+			if pa.Names != nil {
+				count = len(pa.Names)
+			}
+			for count > 0 {
+				count--
+				function.ReturnValues = append(function.ReturnValues, replacePackageConstant(theType, ""))
+				function.FullNameReturnValues = append(function.FullNameReturnValues, replacePackageConstant(theType, packageName))
+			}
 		}
 	}
 	return function
