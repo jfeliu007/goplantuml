@@ -2,7 +2,7 @@
 ## explicit; go 1.13
 github.com/spf13/afero
 github.com/spf13/afero/mem
-# golang.org/x/text v0.3.7
+# golang.org/x/text v0.3.8
 ## explicit; go 1.17
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
