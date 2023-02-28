@@ -130,7 +130,7 @@ strings.Builder *-- parser.LineStringBuilder
 ```
 ```
 goplantuml $GOPATH/src/github.com/jfeliu007/goplantuml/parser > ClassDiagram.puml
-// Generates a file ClassDiagram.plum with the previous specifications
+// Generates a file ClassDiagram.puml with the previous specifications
 ```
 
 There are two different relationships considered in goplantuml:
