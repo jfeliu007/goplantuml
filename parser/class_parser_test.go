@@ -2,7 +2,7 @@ package parser
 
 import (
 	"go/ast"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -94,6 +94,7 @@ func TestGetOrCreateStruct(t *testing.T) {
 					Functions:           make([]*Function, 0),
 					Fields:              make([]*Field, 0),
 					Type:                "",
+					Generics:            NewGeneric(),
 					Composition:         make(map[string]struct{}, 0),
 					Extends:             make(map[string]struct{}, 0),
 					Aggregations:        make(map[string]struct{}, 0),
@@ -181,7 +182,6 @@ func TestRenderStructFields(t *testing.T) {
 }
 
 func TestRenderStructures(t *testing.T) {
-
 	structMap := map[string]*Struct{
 		"MainClass": getTestStruct(),
 	}
@@ -296,6 +296,7 @@ func getTestStruct() *Struct {
 				ReturnValues: []string{"int"},
 			},
 		},
+		Generics: NewGeneric(),
 	}
 }
 
@@ -563,7 +564,7 @@ func TestRender(t *testing.T) {
 	})
 
 	resultRender := parser.Render()
-	result, err := ioutil.ReadFile("../testingsupport/testingsupport.puml")
+	result, err := os.ReadFile("../testingsupport/testingsupport.puml")
 	if err != nil {
 		t.Errorf("TestRender: expected no errors reading testing file, got %s", err.Error())
 	}
@@ -592,7 +593,7 @@ func TestMultipleFolders(t *testing.T) {
 	}
 
 	resultRender := parser.Render()
-	result, err := ioutil.ReadFile("../testingsupport/subfolder1-2.puml")
+	result, err := os.ReadFile("../testingsupport/subfolder1-2.puml")
 	if err != nil {
 		t.Errorf("TestMultipleFolders: expected no errors reading testing file, got %s", err.Error())
 	}

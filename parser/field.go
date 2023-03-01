@@ -9,15 +9,15 @@ import (
 
 const packageConstant = "{packageName}"
 
-//Field can hold the name and type of any field
+// Field can hold the name and type of any field
 type Field struct {
 	Name     string
 	Type     string
 	FullType string
 }
 
-//Returns a string representation of the given expression if it was recognized.
-//Refer to the implementation to see the different string representations.
+// Returns a string representation of the given expression if it was recognized.
+// Refer to the implementation to see the different string representations.
 func getFieldType(exp ast.Expr, aliases map[string]string) (string, []string) {
 	switch v := exp.(type) {
 	case *ast.Ident:
@@ -40,12 +40,23 @@ func getFieldType(exp ast.Expr, aliases map[string]string) (string, []string) {
 		return getFuncType(v, aliases)
 	case *ast.Ellipsis:
 		return getEllipsis(v, aliases)
+	case *ast.IndexExpr:
+		return getIndexExpr(v, aliases)
+	case *ast.IndexListExpr:
+		return getIndexListExpr(v, aliases)
 	}
 	return "", []string{}
 }
 
-func getIdent(v *ast.Ident, aliases map[string]string) (string, []string) {
+func getIndexExpr(v *ast.IndexExpr, aliases map[string]string) (string, []string) {
+	return getFieldType(v.X, aliases)
+}
 
+func getIndexListExpr(v *ast.IndexListExpr, aliases map[string]string) (string, []string) {
+	return getFieldType(v.X, aliases)
+}
+
+func getIdent(v *ast.Ident, aliases map[string]string) (string, []string) {
 	if isPrimitive(v) {
 		return v.Name, []string{}
 	}
@@ -59,7 +70,6 @@ func getArrayType(v *ast.ArrayType, aliases map[string]string) (string, []string
 }
 
 func getSelectorExp(v *ast.SelectorExpr, aliases map[string]string) (string, []string) {
-
 	packageName := v.X.(*ast.Ident).Name
 	if realPackageName, ok := aliases[packageName]; ok {
 		packageName = realPackageName
@@ -69,26 +79,22 @@ func getSelectorExp(v *ast.SelectorExpr, aliases map[string]string) (string, []s
 }
 
 func getMapType(v *ast.MapType, aliases map[string]string) (string, []string) {
-
 	t1, f1 := getFieldType(v.Key, aliases)
 	t2, f2 := getFieldType(v.Value, aliases)
 	return fmt.Sprintf("<font color=blue>map</font>[%s]%s", t1, t2), append(f1, f2...)
 }
 
 func getStarExp(v *ast.StarExpr, aliases map[string]string) (string, []string) {
-
 	t, f := getFieldType(v.X, aliases)
 	return fmt.Sprintf("*%s", t), f
 }
 
 func getChanType(v *ast.ChanType, aliases map[string]string) (string, []string) {
-
 	t, f := getFieldType(v.Value, aliases)
 	return fmt.Sprintf("<font color=blue>chan</font> %s", t), f
 }
 
 func getStructType(v *ast.StructType, aliases map[string]string) (string, []string) {
-
 	fieldList := make([]string, 0)
 	for _, field := range v.Fields.List {
 		t, _ := getFieldType(field.Type, aliases)
@@ -98,7 +104,6 @@ func getStructType(v *ast.StructType, aliases map[string]string) (string, []stri
 }
 
 func getInterfaceType(v *ast.InterfaceType, aliases map[string]string) (string, []string) {
-
 	methods := make([]string, 0)
 	for _, field := range v.Methods.List {
 		methodName := ""
@@ -112,7 +117,6 @@ func getInterfaceType(v *ast.InterfaceType, aliases map[string]string) (string, 
 }
 
 func getFuncType(v *ast.FuncType, aliases map[string]string) (string, []string) {
-
 	function := getFunction(v, "", aliases, "")
 	params := make([]string, 0)
 	for _, pa := range function.Parameters {
@@ -120,9 +124,7 @@ func getFuncType(v *ast.FuncType, aliases map[string]string) (string, []string) 
 	}
 	returns := ""
 	returnList := make([]string, 0)
-	for _, re := range function.ReturnValues {
-		returnList = append(returnList, re)
-	}
+	returnList = append(returnList, function.ReturnValues...)
 	if len(returnList) > 1 {
 		returns = fmt.Sprintf("(%s)", strings.Join(returnList, ", "))
 	} else {
