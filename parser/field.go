@@ -9,15 +9,15 @@ import (
 
 const packageConstant = "{packageName}"
 
-//Field can hold the name and type of any field
+// Field can hold the name and type of any field
 type Field struct {
 	Name     string
 	Type     string
 	FullType string
 }
 
-//Returns a string representation of the given expression if it was recognized.
-//Refer to the implementation to see the different string representations.
+// Returns a string representation of the given expression if it was recognized.
+// Refer to the implementation to see the different string representations.
 func getFieldType(exp ast.Expr, aliases map[string]string) (string, []string) {
 	switch v := exp.(type) {
 	case *ast.Ident:

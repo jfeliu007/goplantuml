@@ -10,7 +10,6 @@ call the Render() function and this will return a string with the class diagram.
 
 See github.com/jfeliu007/goplantuml/cmd/goplantuml/main.go for a command that uses this functions and outputs the text to
 the console.
-
 */
 package parser
 

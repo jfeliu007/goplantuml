@@ -2,7 +2,7 @@ package parser
 
 import "fmt"
 
-//Alias defines a type that is an alias for some other type
+// Alias defines a type that is an alias for some other type
 type Alias struct {
 	Name        string
 	PackageName string
@@ -20,7 +20,7 @@ func getNewAlias(name, packageName, aliasOf string) *Alias {
 	}
 }
 
-//AliasSlice implement the sort.Interface interface to allow for proper sorting of an alias slice
+// AliasSlice implement the sort.Interface interface to allow for proper sorting of an alias slice
 type AliasSlice []Alias
 
 // Len is the number of elements in the collection.
