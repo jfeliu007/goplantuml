@@ -18,5 +18,5 @@ type myInt int
 
 var globalVariable int
 
-//TestComplicatedAlias for testing purposes only
+// TestComplicatedAlias for testing purposes only
 type TestComplicatedAlias func(strings.Builder) bool

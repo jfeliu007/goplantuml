@@ -1,6 +1,6 @@
 package renderingoptions
 
-//Test is for testing purposes
+// Test is for testing purposes
 type Test struct {
 	integer int
 }

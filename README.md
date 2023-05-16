@@ -202,3 +202,8 @@ testingsupport.MyStruct3 o-- testingsupport.MyStruct1
 
 ### Diagram using www.dumels.com
 [UML Diagram](https://www.dumels.com/diagram/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d)
+
+### Diagram rendered in plantuml online server
+[UML Diagram](https://www.plantuml.com/plantuml/uml/SoWkIImgAStDuSfBp4qjBaXCJbKeIIqkoSnBBoujACWlAb6evb80WioyajIYD92qRwKdd0sIX09TXRJyV0rDXQJy_1mki6Wjc4pEIImk1ceABYagJIunLB2nKT08rd4iB4tCJIpAp4lLLB2p8zaO8np6uDHWJAozN70HRGMt_7o4ms6EgUL23HyzXDUqT7KLS4WQSM5gGmIZJGrkdOOOEX5-oiUhpI4rBmKOim00)
+
+For instructions on how to render these diagrams locally using plantuml please visit [https://plantuml.com](https://plantuml.com)
