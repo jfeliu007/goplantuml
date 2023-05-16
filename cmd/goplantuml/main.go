@@ -182,7 +182,7 @@ func getLegend(ro map[goplantuml.RenderingOption]interface{}) (string, error) {
 		case goplantuml.RenderMethods:
 			result = fmt.Sprintf("%sRender Methods: %t\n", result, val.(bool))
 		case goplantuml.AggregatePrivateMembers:
-			result = fmt.Sprintf("%sPritave Aggregations: %t\n", result, val.(bool))
+			result = fmt.Sprintf("%sPrivate Aggregations: %t\n", result, val.(bool))
 		}
 	}
 	return strings.TrimSpace(result), nil
