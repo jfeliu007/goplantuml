@@ -5,7 +5,7 @@
 [![DUMELS Diagram](https://www.dumels.com/api/v1/badge/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d)](https://www.dumels.com/diagram/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d) 
 # GoPlantUML V2
 
-PlantUML Class Diagram Generator for golang projects. Generates class diagram text compatible with plantuml with the information of all structures and interfaces as well as the relationship among them.
+GoPlantUML is an open-source tool developed to streamline the process of generating PlantUML diagrams from Go source code. With GoPlantUML, developers can effortlessly visualize the structure and relationships within their Go projects, aiding in code comprehension and documentation. By parsing Go source code and producing PlantUML diagrams, GoPlantUML empowers developers to create clear and concise visual representations of their codebase architecture, package dependencies, and function interactions. This tool simplifies the documentation process and enhances collaboration among team members by providing a visual overview of complex Go projects. GoPlantUML is actively maintained and welcomes contributions from the Go community.
 
 ## Want to try it on your code? 
 Take a look at [www.dumels.com](https://www.dumels.com). We have created dumels using this library. 
