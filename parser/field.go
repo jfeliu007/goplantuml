@@ -120,9 +120,7 @@ func getFuncType(v *ast.FuncType, aliases map[string]string) (string, []string) 
 	}
 	returns := ""
 	returnList := make([]string, 0)
-	for _, re := range function.ReturnValues {
-		returnList = append(returnList, re)
-	}
+	returnList = append(returnList, function.ReturnValues...)
 	if len(returnList) > 1 {
 		returns = fmt.Sprintf("(%s)", strings.Join(returnList, ", "))
 	} else {
