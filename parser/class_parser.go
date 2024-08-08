@@ -275,7 +275,7 @@ func (p *ClassParser) handleFuncDecl(decl *ast.FuncDecl) {
 		// Only get in when the function is defined for a structure. Global functions are not needed for class diagram
 		theType, _ := getFieldType(decl.Recv.List[0].Type, p.allImports)
 		theType = replacePackageConstant(theType, "")
-		if theType[0] == "*"[0] {
+		if len(theType) > 0 && theType[0] == '*' {
 			theType = theType[1:]
 		}
 		structure := p.getOrCreateStruct(theType)
