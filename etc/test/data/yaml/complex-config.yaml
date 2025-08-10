@@ -1,0 +1,30 @@
+version: v2
+directories:
+  - ./src
+  - ./pkg
+  - ./cmd
+recursive: true
+ignored_directories:
+  - vendor
+  - .git
+  - node_modules
+rendering_options:
+  show_aggregations: true
+  hide_fields: false
+  hide_methods: false
+  hide_connections: false
+  show_compositions: true
+  show_implementations: true
+  show_aliases: true
+  show_connection_labels: true
+  aggregate_private_members: false
+  hide_private_members: false
+  title: "Complex Architecture Diagram"
+  notes: |
+    This is a complex diagram showing:
+    - Multiple packages
+    - All relationships
+    - Connection labels
+output_options:
+  format: puml
+  file_path: "output/diagram.puml"

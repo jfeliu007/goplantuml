@@ -206,3 +206,107 @@ testingsupport.MyStruct3 o-- testingsupport.MyStruct1
 [UML Diagram](https://www.plantuml.com/plantuml/uml/SoWkIImgAStDuSfBp4qjBaXCJbKeIIqkoSnBBoujACWlAb6evb80WioyajIYD92qRwKdd0sIX09TXRJyV0rDXQJy_1mki6Wjc4pEIImk1ceABYagJIunLB2nKT08rd4iB4tCJIpAp4lLLB2p8zaO8np6uDHWJAozN70HRGMt_7o4ms6EgUL23HyzXDUqT7KLS4WQSM5gGmIZJGrkdOOOEX5-oiUhpI4rBmKOim00)
 
 For instructions on how to render these diagrams locally using plantuml please visit [https://plantuml.com](https://plantuml.com)
+
+## V2 Features: Custom Keywords and YAML Configuration
+
+### Custom Keyword Patterns
+
+GoPlantUML V2 supports custom keyword patterns to categorize functions into different resource types. This allows you to create more meaningful diagrams that reflect your project's domain.
+
+#### Command Line Options
+
+You can specify custom keywords using command line flags:
+
+```bash
+# Custom authentication keywords
+goplantuml generate pkg --auth-keywords "SignIn,SignOut,Authentication"
+
+# Custom entity keywords  
+goplantuml generate pkg --entity-keywords "Customer,Product,Order"
+
+# Custom API keywords
+goplantuml generate pkg --api-keywords "Handler,Route,Endpoint"
+
+# Custom database keywords
+goplantuml generate pkg --database-keywords "Connect,Query,Transaction"
+
+# Custom utility keywords
+goplantuml generate pkg --utility-keywords "Logger,Validator,Parser"
+
+# Combine multiple keyword types
+goplantuml generate pkg --recursive \
+  --auth-keywords "SignIn,SignOut" \
+  --entity-keywords "Customer,Product" \
+  --title "E-commerce Architecture"
+```
+
+#### YAML Configuration
+
+For more complex configurations, use a YAML file:
+
+```yaml
+version: "v2"
+directories:
+  - "pkg"
+  - "cmd"
+recursive: true
+output:
+  file: "diagram.puml"
+  format: "puml"
+rendering_options:
+  title: "My Project Architecture"
+  show_aggregations: true
+custom_keywords:
+  auth:
+    - "Login"
+    - "Logout"
+    - "Auth"
+    - "Token"
+    - "JWT"
+  entity:
+    - "User"
+    - "Product"
+    - "Order"
+    - "Customer"
+  database:
+    - "Connect"
+    - "Query"
+    - "Transaction"
+    - "Migrate"
+  api:
+    - "Handler"
+    - "Route"
+    - "Middleware"
+    - "REST"
+  utility:
+    - "Logger"
+    - "Validator"
+    - "Config"
+    - "Helper"
+```
+
+Use the configuration:
+
+```bash
+goplantuml generate --config config.yaml
+```
+
+### Function Categorization
+
+Functions are automatically categorized based on their names:
+
+- **AuthFunctions**: Authentication and security related functions
+- **UserFunctions**: User management functions  
+- **GroupFunctions**: Group management functions
+- **APIFunctions**: HTTP/API related functions
+- **DatabaseFunctions**: Database operations
+- **UtilityFunctions**: Helper and utility functions
+- **GeneralFunctions**: Uncategorized functions
+
+### Benefits
+
+- **Domain-Specific Diagrams**: Reflect your project's business domain
+- **Better Organization**: Group related functions together
+- **Flexible Configuration**: Use command line or YAML for different needs
+- **Reusable Configurations**: Share YAML configs across team members
+- **Clean Architecture Visualization**: Automatically detect architectural patterns

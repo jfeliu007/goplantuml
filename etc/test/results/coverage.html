@@ -1,0 +1,247 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>test: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/jfeliu007/goplantuml/test/test_helper.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package test
+
+import (
+        "os"
+        "path/filepath"
+        "testing"
+
+        "github.com/spf13/afero"
+        "github.com/jfeliu007/goplantuml/pkg/config"
+)
+
+// TestHelper provides utilities for testing GoPlantUML
+type TestHelper struct {
+        FileSystem     afero.Fs
+        TempDir        string
+        BaseConfig     *config.BaseConfig
+        YamlConfig     *config.Config
+        TestDataDir    string
+}
+
+// NewTestHelper creates a new test helper with memory filesystem
+func NewTestHelper() *TestHelper <span class="cov0" title="0">{
+        fs := afero.NewMemMapFs()
+        
+        baseConfig := &amp;config.BaseConfig{}
+        
+        return &amp;TestHelper{
+                FileSystem:  fs,
+                BaseConfig:  baseConfig,
+                TestDataDir: "testdata",
+        }
+}</span>
+
+// NewTestHelperWithRealFS creates a test helper with real filesystem for integration tests
+func NewTestHelperWithRealFS(t *testing.T) *TestHelper <span class="cov0" title="0">{
+        tempDir, err := os.MkdirTemp("", "goplantuml_test_*")
+        if err != nil </span><span class="cov0" title="0">{
+                t.Fatalf("Failed to create temp directory: %v", err)
+        }</span>
+        
+        <span class="cov0" title="0">fs := afero.NewOsFs()
+        baseConfig := &amp;config.BaseConfig{}
+        
+        return &amp;TestHelper{
+                FileSystem:  fs,
+                TempDir:     tempDir,
+                BaseConfig:  baseConfig,
+                TestDataDir: "testdata",
+        }</span>
+}
+
+// CreateTestGoFile creates a Go source file for testing
+func (th *TestHelper) CreateTestGoFile(path, content string) error <span class="cov0" title="0">{
+        return afero.WriteFile(th.FileSystem, path, []byte(content), 0644)
+}</span>
+
+// CreateTestStructFile creates a test Go struct file
+func (th *TestHelper) CreateTestStructFile(path, packageName, structName string, fields []string) error <span class="cov0" title="0">{
+        content := "package " + packageName + "\n\n"
+        content += "type " + structName + " struct {\n"
+        for _, field := range fields </span><span class="cov0" title="0">{
+                content += "\t" + field + "\n"
+        }</span>
+        <span class="cov0" title="0">content += "}\n"
+        
+        return th.CreateTestGoFile(path, content)</span>
+}
+
+// CreateTestInterfaceFile creates a test Go interface file
+func (th *TestHelper) CreateTestInterfaceFile(path, packageName, interfaceName string, methods []string) error <span class="cov0" title="0">{
+        content := "package " + packageName + "\n\n"
+        content += "type " + interfaceName + " interface {\n"
+        for _, method := range methods </span><span class="cov0" title="0">{
+                content += "\t" + method + "\n"
+        }</span>
+        <span class="cov0" title="0">content += "}\n"
+        
+        return th.CreateTestGoFile(path, content)</span>
+}
+
+// CreateTestDirectory creates a directory for testing
+func (th *TestHelper) CreateTestDirectory(path string) error <span class="cov0" title="0">{
+        return th.FileSystem.MkdirAll(path, 0755)
+}</span>
+
+// LoadYamlConfig loads a YAML configuration for testing
+func (th *TestHelper) LoadYamlConfig(configPath string) error <span class="cov0" title="0">{
+        yamlConfig, err := config.LoadConfig(configPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">th.YamlConfig = yamlConfig
+        return nil</span>
+}
+
+// CreateTestYamlConfig creates a test YAML configuration
+func (th *TestHelper) CreateTestYamlConfig(path string, version string, directories []string) error <span class="cov0" title="0">{
+        content := "version: " + version + "\n"
+        content += "directories:\n"
+        for _, dir := range directories </span><span class="cov0" title="0">{
+                content += "  - " + dir + "\n"
+        }</span>
+        <span class="cov0" title="0">content += "recursive: true\n"
+        content += "rendering_options:\n"
+        content += "  show_aggregations: true\n"
+        content += "  show_compositions: true\n"
+        content += "  show_implementations: true\n"
+        
+        return afero.WriteFile(th.FileSystem, path, []byte(content), 0644)</span>
+}
+
+// Cleanup cleans up test resources
+func (th *TestHelper) Cleanup() <span class="cov0" title="0">{
+        if th.TempDir != "" </span><span class="cov0" title="0">{
+                os.RemoveAll(th.TempDir)
+        }</span>
+}
+
+// AssertFileExists checks if a file exists
+func (th *TestHelper) AssertFileExists(t *testing.T, path string) <span class="cov0" title="0">{
+        exists, err := afero.Exists(th.FileSystem, path)
+        if err != nil </span><span class="cov0" title="0">{
+                t.Fatalf("Error checking file existence: %v", err)
+        }</span>
+        <span class="cov0" title="0">if !exists </span><span class="cov0" title="0">{
+                t.Fatalf("Expected file %s to exist", path)
+        }</span>
+}
+
+// AssertFileContent checks if file content matches expected
+func (th *TestHelper) AssertFileContent(t *testing.T, path, expected string) <span class="cov0" title="0">{
+        content, err := afero.ReadFile(th.FileSystem, path)
+        if err != nil </span><span class="cov0" title="0">{
+                t.Fatalf("Error reading file %s: %v", path, err)
+        }</span>
+        <span class="cov0" title="0">if string(content) != expected </span><span class="cov0" title="0">{
+                t.Fatalf("File content mismatch.\nExpected:\n%s\nActual:\n%s", expected, string(content))
+        }</span>
+}
+
+// GetTestDataPath returns the path to test data files
+func (th *TestHelper) GetTestDataPath(filename string) string <span class="cov0" title="0">{
+        return filepath.Join(th.TestDataDir, filename)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

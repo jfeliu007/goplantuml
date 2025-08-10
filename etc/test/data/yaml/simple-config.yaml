@@ -1,0 +1,9 @@
+version: v2
+directories:
+  - testdir1
+  - testdir2
+recursive: true
+rendering_options:
+  show_aggregations: true
+  show_compositions: true
+  show_implementations: true

@@ -5,6 +5,11 @@
 *.so
 *.dylib
 
+# Project binaries
+goplantuml
+goplantuml-*
+generate_diagram
+
 # Test binary, build with `go test -c`
 *.test
 
