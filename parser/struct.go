@@ -45,7 +45,7 @@ func (st *Struct) AddToComposition(fType string) {
 	if len(fType) == 0 {
 		return
 	}
-	if fType[0] == "*"[0] {
+	if len(fType) > 0 && fType[0] == "*"[0] {
 		fType = fType[1:]
 	}
 	st.Composition[fType] = struct{}{}
@@ -58,7 +58,7 @@ func (st *Struct) AddToExtends(fType string) {
 	if len(fType) == 0 {
 		return
 	}
-	if fType[0] == "*"[0] {
+	if len(fType) > 0 && fType[0] == "*"[0] {
 		fType = fType[1:]
 	}
 	st.Extends[fType] = struct{}{}
@@ -79,14 +79,14 @@ func (st *Struct) addToPrivateAggregation(fType string) {
 func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
 	theType, fundamentalTypes := getFieldType(field.Type, aliases)
 	theType = replacePackageConstant(theType, "")
-	if field.Names != nil {
+	if field.Names != nil && len(field.Names) > 0 {
 		theType = replacePackageConstant(theType, "")
 		newField := &Field{
 			Name: field.Names[0].Name,
 			Type: theType,
 		}
 		st.Fields = append(st.Fields, newField)
-		if unicode.IsUpper(rune(newField.Name[0])) {
+		if len(newField.Name) > 0 && unicode.IsUpper(rune(newField.Name[0])) {
 			for _, t := range fundamentalTypes {
 				st.AddToAggregation(replacePackageConstant(t, st.PackageName))
 			}
@@ -96,7 +96,7 @@ func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
 			}
 		}
 	} else if field.Type != nil {
-		if theType[0] == "*"[0] {
+		if len(theType) > 0 && theType[0] == "*"[0] {
 			theType = theType[1:]
 		}
 		st.AddToComposition(theType)
@@ -107,6 +107,9 @@ func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
 func (st *Struct) AddMethod(method *ast.Field, aliases map[string]string) {
 	f, ok := method.Type.(*ast.FuncType)
 	if !ok {
+		return
+	}
+	if method.Names == nil || len(method.Names) == 0 {
 		return
 	}
 	function := getFunction(f, method.Names[0].Name, aliases, st.PackageName)

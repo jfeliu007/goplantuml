@@ -102,7 +102,7 @@ func getInterfaceType(v *ast.InterfaceType, aliases map[string]string) (string, 
 	methods := make([]string, 0)
 	for _, field := range v.Methods.List {
 		methodName := ""
-		if field.Names != nil {
+		if field.Names != nil && len(field.Names) > 0 {
 			methodName = field.Names[0].Name
 		}
 		t, _ := getFieldType(field.Type, aliases)

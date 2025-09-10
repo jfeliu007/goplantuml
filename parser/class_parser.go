@@ -268,14 +268,14 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 func (p *ClassParser) handleFuncDecl(decl *ast.FuncDecl) {
 
 	if decl.Recv != nil {
-		if decl.Recv.List == nil {
+		if decl.Recv.List == nil || len(decl.Recv.List) == 0 {
 			return
 		}
 
 		// Only get in when the function is defined for a structure. Global functions are not needed for class diagram
 		theType, _ := getFieldType(decl.Recv.List[0].Type, p.allImports)
 		theType = replacePackageConstant(theType, "")
-		if theType[0] == "*"[0] {
+		if len(theType) > 0 && theType[0] == "*"[0] {
 			theType = theType[1:]
 		}
 		structure := p.getOrCreateStruct(theType)
@@ -630,7 +630,7 @@ func (p *ClassParser) renderStructMethods(structure *Struct, privateMethods *Lin
 
 	for _, method := range structure.Functions {
 		accessModifier := "+"
-		if unicode.IsLower(rune(method.Name[0])) {
+		if len(method.Name) > 0 && unicode.IsLower(rune(method.Name[0])) {
 			if !p.renderingOptions.PrivateMembers {
 				continue
 			}
@@ -660,7 +660,7 @@ func (p *ClassParser) renderStructMethods(structure *Struct, privateMethods *Lin
 func (p *ClassParser) renderStructFields(structure *Struct, privateFields *LineStringBuilder, publicFields *LineStringBuilder) {
 	for _, field := range structure.Fields {
 		accessModifier := "+"
-		if unicode.IsLower(rune(field.Name[0])) {
+		if len(field.Name) > 0 && unicode.IsLower(rune(field.Name[0])) {
 			if !p.renderingOptions.PrivateMembers {
 				continue
 			}
