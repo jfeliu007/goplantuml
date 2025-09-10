@@ -9,21 +9,24 @@ jobs:
   Automated-test-and-code-analisys:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: 1.17
+          go-version: '1.21'
 
       - name: Get
         run: go get -t -v ./...
 
       - name: Get lint
-        run: go get -u golang.org/x/lint/golint
+        run: go install golang.org/x/lint/golint@latest
 
       - name: Get Go Cyclo
-        run: go get github.com/fzipp/gocyclo/cmd/gocyclo
+        run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
+
+      - name: Add Go bin to PATH
+        run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
       - name: Go Mod Tidy
         run: go mod tidy
