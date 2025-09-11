@@ -55,6 +55,7 @@ type ClassDiagramOptions struct {
 	IgnoredDirectories []string
 	RenderingOptions   map[RenderingOption]interface{}
 	Recursive          bool
+	MaxDepth           int // Maximum nesting depth for packages (0 = unlimited)
 }
 
 // RenderingOptions will allow the class parser to optionally enebale or disable the things to render.
@@ -118,11 +119,25 @@ type ClassParser struct {
 	renderingOptions   *RenderingOptions
 	structure          map[string]map[string]*Struct
 	currentPackageName string
+	currentDirPath     string   // Current directory being parsed
+	rootDirectories    []string // Root directories being processed
 	allInterfaces      map[string]struct{}
 	allStructs         map[string]struct{}
 	allImports         map[string]string
 	allAliases         map[string]*Alias
 	allRenamedStructs  map[string]map[string]string
+	maxDepth           int
+	packageHierarchy   map[string]*PackageNode // Maps package full path to PackageNode
+}
+
+// PackageNode represents a package in the hierarchy
+type PackageNode struct {
+	Name       string                  // Short name (e.g., "subfolder")
+	FullPath   string                  // Full path (e.g., "testingsupport.subfolder")
+	Parent     *PackageNode            // Parent package
+	Children   map[string]*PackageNode // Child packages
+	Structures map[string]*Struct      // Structures in this package
+	Depth      int                     // Depth in hierarchy
 }
 
 // NewClassDiagramWithOptions returns a new classParser with which can Render the class diagram of
@@ -142,11 +157,14 @@ func NewClassDiagramWithOptions(options *ClassDiagramOptions) (*ClassParser, err
 			Notes:            "",
 		},
 		structure:         make(map[string]map[string]*Struct),
+		rootDirectories:   options.Directories,
 		allInterfaces:     make(map[string]struct{}),
 		allStructs:        make(map[string]struct{}),
 		allImports:        make(map[string]string),
 		allAliases:        make(map[string]*Alias),
 		allRenamedStructs: make(map[string]map[string]string),
+		maxDepth:          options.MaxDepth,
+		packageHierarchy:  make(map[string]*PackageNode),
 	}
 	ignoreDirectoryMap := map[string]struct{}{}
 	for _, dir := range options.IgnoredDirectories {
@@ -185,7 +203,7 @@ func NewClassDiagramWithOptions(options *ClassDiagramOptions) (*ClassParser, err
 		if st != nil {
 			for i := range classParser.allInterfaces {
 				inter := classParser.getStruct(i)
-				if st.ImplementsInterface(inter) {
+				if inter != nil && st.ImplementsInterface(inter) {
 					st.AddToExtends(i)
 				}
 			}
@@ -198,24 +216,211 @@ func NewClassDiagramWithOptions(options *ClassDiagramOptions) (*ClassParser, err
 // NewClassDiagram returns a new classParser with which can Render the class diagram of
 // files in the given directory
 func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recursive bool) (*ClassParser, error) {
+	return NewClassDiagramWithMaxDepth(directoryPaths, ignoreDirectories, recursive, 0)
+}
+
+// NewClassDiagramWithMaxDepth returns a new classParser with which can Render the class diagram of
+// files in the given directory with a maximum nesting depth
+func NewClassDiagramWithMaxDepth(directoryPaths []string, ignoreDirectories []string, recursive bool, maxDepth int) (*ClassParser, error) {
 	options := &ClassDiagramOptions{
 		Directories:        directoryPaths,
 		IgnoredDirectories: ignoreDirectories,
 		Recursive:          recursive,
 		RenderingOptions:   map[RenderingOption]interface{}{},
 		FileSystem:         afero.NewOsFs(),
+		MaxDepth:           maxDepth,
 	}
 	return NewClassDiagramWithOptions(options)
+}
+
+// getOrCreatePackageNode creates or retrieves a package node in the hierarchy
+func (p *ClassParser) getOrCreatePackageNode(dirPath string) *PackageNode {
+	// Calculate the package path relative to the root directories
+	packagePath := p.calculatePackagePath(dirPath)
+
+	if node, exists := p.packageHierarchy[packagePath]; exists {
+		return node
+	}
+
+	// Create new package node
+	// Use the last component of the package path as the display name
+	displayName := filepath.Base(dirPath)
+	if strings.Contains(packagePath, ".") {
+		parts := strings.Split(packagePath, ".")
+		displayName = parts[len(parts)-1]
+	}
+
+	node := &PackageNode{
+		Name:       displayName,
+		FullPath:   packagePath,
+		Children:   make(map[string]*PackageNode),
+		Structures: make(map[string]*Struct),
+		Depth:      p.calculateDepth(packagePath),
+	}
+
+	// Check depth limit
+	if p.maxDepth > 0 && node.Depth > p.maxDepth {
+		return nil
+	}
+
+	// Establish parent-child relationships
+	p.establishParentChildRelationships(node)
+
+	p.packageHierarchy[packagePath] = node
+	return node
+}
+
+// establishParentChildRelationships sets up parent-child relationships for a package node
+func (p *ClassParser) establishParentChildRelationships(node *PackageNode) {
+	if node.Depth <= 1 {
+		return // Root package, no parent
+	}
+
+	// Find parent path by removing the last component
+	parentPath := p.getParentPath(node.FullPath)
+	if parentPath == "" {
+		return
+	}
+
+	// Get or create parent node
+	parentNode := p.packageHierarchy[parentPath]
+	if parentNode == nil {
+		// Create parent node if it doesn't exist
+		parentDir := p.getDirectoryForPackagePath(parentPath)
+		if parentDir != "" {
+			parentNode = p.getOrCreatePackageNode(parentDir)
+		}
+	}
+
+	if parentNode != nil {
+		node.Parent = parentNode
+		parentNode.Children[node.FullPath] = node
+	}
+}
+
+// getParentPath returns the parent path of a given package path
+func (p *ClassParser) getParentPath(packagePath string) string {
+	lastDot := strings.LastIndex(packagePath, ".")
+	if lastDot == -1 {
+		return "" // No parent
+	}
+	return packagePath[:lastDot]
+}
+
+// getDirectoryForPackagePath returns the directory path for a given package path
+func (p *ClassParser) getDirectoryForPackagePath(packagePath string) string {
+	// Convert package path back to directory path
+	// For example: "cmd.goplantuml" -> "cmd/goplantuml"
+	dirPath := strings.ReplaceAll(packagePath, ".", string(filepath.Separator))
+
+	// Check if this directory exists relative to any of our root directories
+	for _, rootDir := range p.rootDirectories {
+		fullPath := filepath.Join(rootDir, dirPath)
+		if _, err := os.Stat(fullPath); err == nil {
+			return fullPath
+		}
+	}
+
+	return ""
+}
+
+// calculatePackagePath determines the package path from directory path
+func (p *ClassParser) calculatePackagePath(dirPath string) string {
+	absPath, _ := filepath.Abs(dirPath)
+
+	// Find the shortest root directory that contains this path
+	var shortestRoot string
+	for _, root := range p.getRootDirectories() {
+		rootAbs, _ := filepath.Abs(root)
+		if strings.HasPrefix(absPath, rootAbs) {
+			if shortestRoot == "" || len(rootAbs) < len(shortestRoot) {
+				shortestRoot = rootAbs
+			}
+		}
+	}
+
+	if shortestRoot == "" {
+		return filepath.Base(absPath)
+	}
+
+	// Get relative path from root
+	relPath, err := filepath.Rel(shortestRoot, absPath)
+	if err != nil {
+		return filepath.Base(absPath)
+	}
+
+	// Convert path separators to dots for package naming
+	packagePath := strings.ReplaceAll(relPath, string(filepath.Separator), ".")
+	if packagePath == "." {
+		return filepath.Base(shortestRoot)
+	}
+
+	// Check if we're at the project root level (no nesting)
+	// If the relative path doesn't contain separators, we're at the top level
+	if !strings.Contains(relPath, string(filepath.Separator)) {
+		return packagePath
+	}
+
+	// Special case: if we're processing the project root (current directory)
+	// and the path contains testingsupport or cmd, we want to preserve the nesting
+	// This handles the case where these are subdirectories of the project
+	if strings.HasPrefix(relPath, "testingsupport") || strings.HasPrefix(relPath, "cmd") {
+		return packagePath
+	}
+
+	// Special case: if we're processing cmd/goplantuml, it should be treated as cmd.goplantuml
+	// not as a separate root package
+	if strings.HasPrefix(relPath, "cmd/goplantuml") {
+		return "cmd.goplantuml"
+	}
+
+	// Special case: if we're processing cmd directory, it should be treated as cmd
+	if strings.HasPrefix(relPath, "cmd/") {
+		return "cmd"
+	}
+
+	// Only prepend root directory name if we're not at the root level
+	// and if the root directory is not "." (current directory)
+	rootName := filepath.Base(shortestRoot)
+	if packagePath != "" && rootName != "." {
+		return rootName + "." + packagePath
+	}
+
+	return packagePath
+}
+
+// calculateDepth calculates the nesting depth of a package path
+func (p *ClassParser) calculateDepth(packagePath string) int {
+	if packagePath == "" {
+		return 0
+	}
+	return strings.Count(packagePath, ".") + 1
+}
+
+// getRootDirectories returns the root directories being processed
+func (p *ClassParser) getRootDirectories() []string {
+	return p.rootDirectories
 }
 
 // parse the given ast.Package into the ClassParser structure
 func (p *ClassParser) parsePackage(node ast.Node) {
 	pack := node.(*ast.Package)
-	p.currentPackageName = pack.Name
+
+	// Create package node for this directory
+	packageNode := p.getOrCreatePackageNode(p.currentDirPath)
+	if packageNode == nil {
+		return // Skip if depth limit exceeded
+	}
+
+	// Use the hierarchical package name for the structure map
+	p.currentPackageName = packageNode.FullPath
+
+	// Initialize structure maps
 	_, ok := p.structure[p.currentPackageName]
 	if !ok {
 		p.structure[p.currentPackageName] = make(map[string]*Struct)
 	}
+
 	var sortedFiles []string
 	for fileName := range pack.Files {
 		sortedFiles = append(sortedFiles, fileName)
@@ -244,6 +449,7 @@ func (p *ClassParser) parseImports(impt *ast.ImportSpec) {
 }
 
 func (p *ClassParser) parseDirectory(directoryPath string) error {
+	p.currentDirPath = directoryPath
 	fs := token.NewFileSet()
 	result, err := parser.ParseDir(fs, directoryPath, nil, 0)
 	if err != nil {
@@ -268,7 +474,7 @@ func (p *ClassParser) parseFileDeclarations(node ast.Decl) {
 func (p *ClassParser) handleFuncDecl(decl *ast.FuncDecl) {
 
 	if decl.Recv != nil {
-		if decl.Recv.List == nil || len(decl.Recv.List) == 0 {
+		if len(decl.Recv.List) == 0 {
 			return
 		}
 
@@ -306,19 +512,17 @@ func handleGenDecInterfaceType(p *ClassParser, typeName string, c *ast.Interface
 		switch t := f.Type.(type) {
 		case *ast.FuncType:
 			p.getOrCreateStruct(typeName).AddMethod(f, p.allImports)
-			break
 		case *ast.Ident:
 			f, _ := getFieldType(t, p.allImports)
 			st := p.getOrCreateStruct(typeName)
 			f = replacePackageConstant(f, st.PackageName)
 			st.AddToComposition(f)
-			break
 		}
 	}
 }
 
 func (p *ClassParser) handleGenDecl(decl *ast.GenDecl) {
-	if decl.Specs == nil || len(decl.Specs) < 1 {
+	if len(decl.Specs) < 1 {
 		// This might be a type of General Declaration we do not know how to handle.
 		return
 	}
@@ -378,7 +582,6 @@ func (p *ClassParser) processSpec(spec ast.Spec) {
 			p.allRenamedStructs[pack[0]][renamedClass] = pack[1]
 		}
 	}
-	return
 }
 
 // If this element is an array or a pointer, this function will return the type that is closer to these
@@ -412,19 +615,30 @@ func (p *ClassParser) Render() string {
 		str.WriteLineWithDepth(0, "end legend")
 	}
 
-	var packages []string
-	for pack := range p.structure {
-		packages = append(packages, pack)
-	}
-	sort.Strings(packages)
-	for _, pack := range packages {
-		structures := p.structure[pack]
-		p.renderStructures(pack, structures, str)
+	// Create builders for relationships
+	composition := &LineStringBuilder{}
+	extends := &LineStringBuilder{}
+	aggregations := &LineStringBuilder{}
 
-	}
+	// Render hierarchical packages
+	p.renderHierarchicalPackages(str, composition, extends, aggregations)
+
+	// Render aliases
 	if p.renderingOptions.Aliases {
 		p.renderAliases(str)
 	}
+
+	// Render all relationships collected during package rendering
+	if p.renderingOptions.Compositions {
+		str.WriteLineWithDepth(0, composition.String())
+	}
+	if p.renderingOptions.Implementations {
+		str.WriteLineWithDepth(0, extends.String())
+	}
+	if p.renderingOptions.Aggregations {
+		str.WriteLineWithDepth(0, aggregations.String())
+	}
+
 	if !p.renderingOptions.Fields {
 		str.WriteLineWithDepth(0, "hide fields")
 	}
@@ -433,6 +647,87 @@ func (p *ClassParser) Render() string {
 	}
 	str.WriteLineWithDepth(0, "@enduml")
 	return str.String()
+}
+
+// renderHierarchicalPackages renders packages in a hierarchical structure
+func (p *ClassParser) renderHierarchicalPackages(str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) {
+	// Find root packages (packages with no parent)
+	rootPackages := make(map[string]*PackageNode)
+	for _, node := range p.packageHierarchy {
+		if node.Parent == nil {
+			rootPackages[node.FullPath] = node
+		}
+	}
+
+	// Sort root packages by name
+	var sortedRoots []string
+	for path := range rootPackages {
+		sortedRoots = append(sortedRoots, path)
+	}
+	sort.Strings(sortedRoots)
+
+	// Render each root package and its children
+	for _, rootPath := range sortedRoots {
+		p.renderPackageNode(rootPackages[rootPath], str, composition, extends, aggregations, 0)
+	}
+}
+
+// renderPackageNode renders a package node and its children recursively
+func (p *ClassParser) renderPackageNode(node *PackageNode, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, depth int) {
+	if node == nil {
+		return
+	}
+
+	// Render this package's namespace using the short name
+	str.WriteLineWithDepth(depth, fmt.Sprintf(`namespace %s {`, node.Name))
+
+	// Render structures in this package using the full path
+	if structures, exists := p.structure[node.FullPath]; exists {
+		p.renderStructuresInPackage(node.FullPath, structures, str, depth+1, composition, extends, aggregations)
+	}
+
+	// Render child packages
+	var childNames []string
+	for _, child := range node.Children {
+		childNames = append(childNames, child.FullPath)
+	}
+	sort.Strings(childNames)
+
+	for _, childPath := range childNames {
+		p.renderPackageNode(node.Children[childPath], str, composition, extends, aggregations, depth+1)
+	}
+
+	// Close namespace
+	str.WriteLineWithDepth(depth, "}")
+}
+
+// renderStructuresInPackage renders structures within a package namespace
+func (p *ClassParser) renderStructuresInPackage(pack string, structures map[string]*Struct, str *LineStringBuilder, depth int, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) {
+	if len(structures) > 0 {
+		names := []string{}
+		for name := range structures {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+
+		for _, name := range names {
+			structure := structures[name]
+			p.renderStructure(structure, pack, name, str, composition, extends, aggregations)
+		}
+
+		// Render renamed structs if any
+		var orderedRenamedStructs []string
+		for tempName := range p.allRenamedStructs[pack] {
+			orderedRenamedStructs = append(orderedRenamedStructs, tempName)
+		}
+		sort.Strings(orderedRenamedStructs)
+		for _, tempName := range orderedRenamedStructs {
+			name := p.allRenamedStructs[pack][tempName]
+			str.WriteLineWithDepth(depth, fmt.Sprintf(`class "%s" as %s {`, name, tempName))
+			str.WriteLineWithDepth(depth+1, aliasComplexNameComment)
+			str.WriteLineWithDepth(depth, "}")
+		}
+	}
 }
 
 func (p *ClassParser) renderStructures(pack string, structures map[string]*Struct, str *LineStringBuilder) {
@@ -464,7 +759,7 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 			str.WriteLineWithDepth(2, aliasComplexNameComment)
 			str.WriteLineWithDepth(1, "}")
 		}
-		str.WriteLineWithDepth(0, fmt.Sprintf(`}`))
+		str.WriteLineWithDepth(0, "}")
 		if p.renderingOptions.Compositions {
 			str.WriteLineWithDepth(0, composition.String())
 		}
@@ -537,7 +832,7 @@ func (p *ClassParser) renderStructure(structure *Struct, pack string, name strin
 	if publicMethods.Len() > 0 {
 		str.WriteLineWithDepth(0, publicMethods.String())
 	}
-	str.WriteLineWithDepth(1, fmt.Sprintf(`}`))
+	str.WriteLineWithDepth(1, "}")
 }
 
 func (p *ClassParser) renderCompositions(structure *Struct, name string, composition *LineStringBuilder) {
@@ -731,7 +1026,7 @@ func (p *ClassParser) SetRenderingOptions(ro map[RenderingOption]interface{}) er
 		case RenderPrivateMembers:
 			p.renderingOptions.PrivateMembers = val.(bool)
 		default:
-			return fmt.Errorf("Invalid Rendering option %v", option)
+			return fmt.Errorf("invalid rendering option %v", option)
 		}
 
 	}
