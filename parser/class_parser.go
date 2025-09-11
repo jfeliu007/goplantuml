@@ -144,7 +144,24 @@ type PackageNode struct {
 // files in the given directory passed in the ClassDiargamOptions. This will also alow for different types of FileSystems
 // Passed since it is part of the ClassDiagramOptions as well.
 func NewClassDiagramWithOptions(options *ClassDiagramOptions) (*ClassParser, error) {
-	classParser := &ClassParser{
+	classParser := newClassParser(options)
+
+	ignoreDirectoryMap := buildIgnoreDirectoryMap(options.IgnoredDirectories)
+
+	if err := processDirectories(classParser, options, ignoreDirectoryMap); err != nil {
+		return nil, err
+	}
+
+	populateInterfaceImplementations(classParser)
+
+	classParser.SetRenderingOptions(options.RenderingOptions)
+	return classParser, nil
+}
+
+// --- helpers ---
+
+func newClassParser(options *ClassDiagramOptions) *ClassParser {
+	return &ClassParser{
 		renderingOptions: &RenderingOptions{
 			Aggregations:     false,
 			Fields:           true,
@@ -166,51 +183,69 @@ func NewClassDiagramWithOptions(options *ClassDiagramOptions) (*ClassParser, err
 		maxDepth:          options.MaxDepth,
 		packageHierarchy:  make(map[string]*PackageNode),
 	}
-	ignoreDirectoryMap := map[string]struct{}{}
-	for _, dir := range options.IgnoredDirectories {
-		ignoreDirectoryMap[dir] = struct{}{}
+}
+
+func buildIgnoreDirectoryMap(ignored []string) map[string]struct{} {
+	m := map[string]struct{}{}
+	for _, dir := range ignored {
+		m[dir] = struct{}{}
 	}
+	return m
+}
+
+func processDirectories(classParser *ClassParser, options *ClassDiagramOptions, ignoreDirs map[string]struct{}) error {
 	for _, directoryPath := range options.Directories {
 		if options.Recursive {
-			err := afero.Walk(options.FileSystem, directoryPath, func(path string, info os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-				if info.IsDir() {
-					if strings.HasPrefix(info.Name(), ".") || info.Name() == "vendor" {
-						return filepath.SkipDir
-					}
-					if _, ok := ignoreDirectoryMap[path]; ok {
-						return filepath.SkipDir
-					}
-					classParser.parseDirectory(path)
-				}
-				return nil
-			})
-			if err != nil {
-				return nil, err
+			if err := walkDirectory(options.FileSystem, directoryPath, ignoreDirs, classParser); err != nil {
+				return err
 			}
 		} else {
-			err := classParser.parseDirectory(directoryPath)
-			if err != nil {
-				return nil, err
+			if err := classParser.parseDirectory(directoryPath); err != nil {
+				return err
 			}
 		}
 	}
+	return nil
+}
 
+func walkDirectory(fs afero.Fs, root string, ignoreDirs map[string]struct{}, classParser *ClassParser) error {
+	return afero.Walk(fs, root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			if shouldSkipDir(path, info, ignoreDirs) {
+				return filepath.SkipDir
+			}
+			classParser.parseDirectory(path)
+		}
+		return nil
+	})
+}
+
+func shouldSkipDir(path string, info os.FileInfo, ignoreDirs map[string]struct{}) bool {
+	if strings.HasPrefix(info.Name(), ".") || info.Name() == "vendor" {
+		return true
+	}
+	if _, ok := ignoreDirs[path]; ok {
+		return true
+	}
+	return false
+}
+
+func populateInterfaceImplementations(classParser *ClassParser) {
 	for s := range classParser.allStructs {
 		st := classParser.getStruct(s)
-		if st != nil {
-			for i := range classParser.allInterfaces {
-				inter := classParser.getStruct(i)
-				if inter != nil && st.ImplementsInterface(inter) {
-					st.AddToExtends(i)
-				}
+		if st == nil {
+			continue
+		}
+		for i := range classParser.allInterfaces {
+			inter := classParser.getStruct(i)
+			if inter != nil && st.ImplementsInterface(inter) {
+				st.AddToExtends(i)
 			}
 		}
 	}
-	classParser.SetRenderingOptions(options.RenderingOptions)
-	return classParser, nil
 }
 
 // NewClassDiagram returns a new classParser with which can Render the class diagram of
