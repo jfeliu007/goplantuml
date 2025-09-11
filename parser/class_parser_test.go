@@ -977,13 +977,13 @@ namespace connectionlabels {
     class connectionlabels.AliasOfInt << (T, #FF7700) >>  {
     }
 }
+"__builtin__.int" #.. "alias of""connectionlabels.AliasOfInt"
 "connectionlabels.AliasOfInt" *-- "extends""connectionlabels.ImplementsAbstractInterface"
 
 "connectionlabels.AbstractInterface" <|-- "implements""connectionlabels.ImplementsAbstractInterface"
 
 "connectionlabels.ImplementsAbstractInterface""uses" o-- "connectionlabels.AbstractInterface"
 
-"__builtin__.int" #.. "alias of""connectionlabels.AliasOfInt"
 @enduml
 `
 	if result != expectedResult {
