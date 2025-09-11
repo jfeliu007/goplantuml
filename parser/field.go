@@ -189,8 +189,22 @@ func isPrimitiveString(t string) bool {
 }
 
 func replacePackageConstant(field, packageName string) string {
+	// Don't replace package constants for external packages
+	if isExternalPackage(field) {
+		return field
+	}
+
 	if packageName != "" {
 		packageName = fmt.Sprintf("%s.", packageName)
 	}
 	return strings.Replace(field, packageConstant, packageName, 1)
+}
+
+// isExternalPackage checks if a field type represents an external package
+func isExternalPackage(field string) bool {
+	// External packages contain dots and don't start with packageConstant
+	if strings.Contains(field, ".") && !strings.Contains(field, packageConstant) {
+		return true
+	}
+	return false
 }
