@@ -16,6 +16,7 @@ type Struct struct {
 	Extends             map[string]struct{}
 	Aggregations        map[string]struct{}
 	PrivateAggregations map[string]struct{}
+	TypeParameters      []TypeParameter
 }
 
 // ImplementsInterface returns true if the struct st conforms ot the given interface
@@ -88,10 +89,16 @@ func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
 		st.Fields = append(st.Fields, newField)
 		if len(newField.Name) > 0 && unicode.IsUpper(rune(newField.Name[0])) {
 			for _, t := range fundamentalTypes {
+				if st.isGenericParamType(t) {
+					continue
+				}
 				st.AddToAggregation(replacePackageConstant(t, st.PackageName))
 			}
 		} else {
 			for _, t := range fundamentalTypes {
+				if st.isGenericParamType(t) {
+					continue
+				}
 				st.addToPrivateAggregation(replacePackageConstant(t, st.PackageName))
 			}
 		}
@@ -101,6 +108,26 @@ func (st *Struct) AddField(field *ast.Field, aliases map[string]string) {
 		}
 		st.AddToComposition(theType)
 	}
+}
+
+// TypeParameter represents a generic type parameter and its constraint
+type TypeParameter struct {
+	Name        string
+	Constraints string
+}
+
+// isGenericParamType reports whether the given fundamental type refers to a type parameter of this struct
+func (st *Struct) isGenericParamType(fundamentalType string) bool {
+	if len(st.TypeParameters) == 0 {
+		return false
+	}
+	for _, tp := range st.TypeParameters {
+		expected := packageConstant + tp.Name
+		if fundamentalType == expected {
+			return true
+		}
+	}
+	return false
 }
 
 // AddMethod Parse the Field and if it is an ast.FuncType, then add the methods into the structure

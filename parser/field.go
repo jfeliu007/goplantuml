@@ -40,6 +40,12 @@ func getFieldType(exp ast.Expr, aliases map[string]string) (string, []string) {
 		return getFuncType(v, aliases)
 	case *ast.Ellipsis:
 		return getEllipsis(v, aliases)
+	case *ast.IndexExpr:
+		// Generic instantiation like Foo[T] or pkg.Foo[T]; we only care about the base type name
+		return getFieldType(v.X, aliases)
+	case *ast.IndexListExpr:
+		// Multi-parameter instantiation like Foo[T, U]
+		return getFieldType(v.X, aliases)
 	}
 	return "", []string{}
 }

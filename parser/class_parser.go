@@ -573,6 +573,11 @@ func (p *ClassParser) processSpec(spec ast.Spec) {
 	switch v := spec.(type) {
 	case *ast.TypeSpec:
 		typeName = v.Name.Name
+		// Parse generic type parameters if present
+		if v.TypeParams != nil && len(v.TypeParams.List) > 0 {
+			st := p.getOrCreateStruct(typeName)
+			st.TypeParameters = parseTypeParameters(v.TypeParams, p.allImports)
+		}
 		switch c := v.Type.(type) {
 		case *ast.StructType:
 			declarationType = "class"
@@ -619,6 +624,86 @@ func (p *ClassParser) processSpec(spec ast.Spec) {
 	}
 }
 
+// parseTypeParameters parses ast.FieldList of type parameters into []TypeParameter
+func parseTypeParameters(fl *ast.FieldList, aliases map[string]string) []TypeParameter {
+	params := make([]TypeParameter, 0)
+	if fl == nil {
+		return params
+	}
+	for _, f := range fl.List {
+		// Each field may declare multiple identifiers with the same constraint
+		constraint := stringifyConstraint(f.Type, aliases)
+		for _, name := range f.Names {
+			params = append(params, TypeParameter{Name: name.Name, Constraints: constraint})
+		}
+	}
+	return params
+}
+
+// stringifyConstraint produces a string for a type constraint expression
+func stringifyConstraint(expr ast.Expr, aliases map[string]string) string {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		// any, comparable, or named constraints
+		return t.Name
+	case *ast.InterfaceType:
+		// Could be interface{ ~int | ~string | Method() }
+		// For simplicity, reuse getInterfaceType to render methods, but try to flatten embedded types
+		// Prefer union-like listing when possible
+		return strings.TrimSpace(strings.TrimPrefix(strings.TrimSuffix(renderInterfaceConstraint(t, aliases), "}"), "interface{"))
+	case *ast.BinaryExpr:
+		// Union of terms: X | Y
+		if t.Op == token.OR {
+			left := stringifyConstraint(t.X, aliases)
+			right := stringifyConstraint(t.Y, aliases)
+			return left + "|" + right
+		}
+		str, _ := getFieldType(t, aliases)
+		return replacePackageConstant(str, "")
+	case *ast.UnaryExpr:
+		// Tilde type terms: ~int
+		if t.Op == token.TILDE {
+			inner := stringifyConstraint(t.X, aliases)
+			return "~" + inner
+		}
+		str, _ := getFieldType(t, aliases)
+		return replacePackageConstant(str, "")
+	case *ast.ParenExpr:
+		return stringifyConstraint(t.X, aliases)
+	case *ast.SelectorExpr:
+		pkg := t.X.(*ast.Ident).Name
+		if real, ok := aliases[pkg]; ok {
+			pkg = real
+		}
+		return pkg + "." + t.Sel.Name
+	case *ast.ArrayType, *ast.MapType, *ast.StarExpr, *ast.ChanType, *ast.FuncType, *ast.StructType:
+		// Fallback to existing field type stringifier
+		str, _ := getFieldType(t, aliases)
+		return replacePackageConstant(str, "")
+	default:
+		str, _ := getFieldType(t, aliases)
+		return replacePackageConstant(str, "")
+	}
+}
+
+// renderInterfaceConstraint renders interface type constraints similarly to getInterfaceType but returns body only
+func renderInterfaceConstraint(v *ast.InterfaceType, aliases map[string]string) string {
+	methods := make([]string, 0)
+	for _, field := range v.Methods.List {
+		// If method has a name, keep signature; otherwise it may be embedded type or union-like element
+		if field.Names != nil && len(field.Names) > 0 {
+			methodName := field.Names[0].Name
+			t, _ := getFieldType(field.Type, aliases)
+			methods = append(methods, methodName+" "+t)
+		} else {
+			// Embedded constraint type
+			emb := stringifyConstraint(field.Type, aliases)
+			methods = append(methods, emb)
+		}
+	}
+	return "interface{" + strings.Join(methods, "; ") + "}"
+}
+
 // If this element is an array or a pointer, this function will return the type that is closer to these
 // two definitions. For example []***map[int] string will return map[int]string
 func getBasicType(theType ast.Expr) ast.Expr {
@@ -654,9 +739,13 @@ func (p *ClassParser) Render() string {
 	composition := &LineStringBuilder{}
 	extends := &LineStringBuilder{}
 	aggregations := &LineStringBuilder{}
+	params := &LineStringBuilder{}
+	// Deduplication sets for generic outputs
+	emittedTypeParamClass := map[string]struct{}{}
+	emittedParamLink := map[string]struct{}{}
 
 	// Render hierarchical packages
-	p.renderHierarchicalPackages(str, composition, extends, aggregations)
+	p.renderHierarchicalPackagesWithGenerics(str, composition, extends, aggregations, params, emittedTypeParamClass, emittedParamLink)
 
 	// Render aliases
 	if p.renderingOptions.Aliases {
@@ -673,6 +762,8 @@ func (p *ClassParser) Render() string {
 	if p.renderingOptions.Aggregations {
 		str.WriteLineWithDepth(0, aggregations.String())
 	}
+	// Always render generic parameter relationships at the end
+	str.WriteLineWithDepth(0, params.String())
 
 	if !p.renderingOptions.Fields {
 		str.WriteLineWithDepth(0, "hide fields")
@@ -684,8 +775,8 @@ func (p *ClassParser) Render() string {
 	return str.String()
 }
 
-// renderHierarchicalPackages renders packages in a hierarchical structure
-func (p *ClassParser) renderHierarchicalPackages(str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) {
+// Wrapper to pass dedupe maps
+func (p *ClassParser) renderHierarchicalPackagesWithGenerics(str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, params *LineStringBuilder, emittedTypeParamClass map[string]struct{}, emittedParamLink map[string]struct{}) {
 	// Find root packages (packages with no parent)
 	rootPackages := make(map[string]*PackageNode)
 	for _, node := range p.packageHierarchy {
@@ -703,12 +794,35 @@ func (p *ClassParser) renderHierarchicalPackages(str *LineStringBuilder, composi
 
 	// Render each root package and its children
 	for _, rootPath := range sortedRoots {
-		p.renderPackageNode(rootPackages[rootPath], str, composition, extends, aggregations, 0)
+		p.renderPackageNodeWithGenerics(rootPackages[rootPath], str, composition, extends, aggregations, params, emittedTypeParamClass, emittedParamLink, 0)
+	}
+}
+
+// renderHierarchicalPackages renders packages in a hierarchical structure
+func (p *ClassParser) renderHierarchicalPackages(str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, params *LineStringBuilder) {
+	// Find root packages (packages with no parent)
+	rootPackages := make(map[string]*PackageNode)
+	for _, node := range p.packageHierarchy {
+		if node.Parent == nil {
+			rootPackages[node.FullPath] = node
+		}
+	}
+
+	// Sort root packages by name
+	var sortedRoots []string
+	for path := range rootPackages {
+		sortedRoots = append(sortedRoots, path)
+	}
+	sort.Strings(sortedRoots)
+
+	// Render each root package and its children
+	for _, rootPath := range sortedRoots {
+		p.renderPackageNode(rootPackages[rootPath], str, composition, extends, aggregations, params, 0)
 	}
 }
 
 // renderPackageNode renders a package node and its children recursively
-func (p *ClassParser) renderPackageNode(node *PackageNode, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, depth int) {
+func (p *ClassParser) renderPackageNode(node *PackageNode, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, params *LineStringBuilder, depth int) {
 	if node == nil {
 		return
 	}
@@ -718,7 +832,7 @@ func (p *ClassParser) renderPackageNode(node *PackageNode, str *LineStringBuilde
 
 	// Render structures in this package using the full path
 	if structures, exists := p.structure[node.FullPath]; exists {
-		p.renderStructuresInPackage(node.FullPath, structures, str, depth+1, composition, extends, aggregations)
+		p.renderStructuresInPackage(node.FullPath, structures, str, depth+1, composition, extends, aggregations, params)
 	}
 
 	// Render child packages
@@ -729,7 +843,36 @@ func (p *ClassParser) renderPackageNode(node *PackageNode, str *LineStringBuilde
 	sort.Strings(childNames)
 
 	for _, childPath := range childNames {
-		p.renderPackageNode(node.Children[childPath], str, composition, extends, aggregations, depth+1)
+		p.renderPackageNode(node.Children[childPath], str, composition, extends, aggregations, params, depth+1)
+	}
+
+	// Close namespace
+	str.WriteLineWithDepth(depth, "}")
+}
+
+// Generic-aware variant
+func (p *ClassParser) renderPackageNodeWithGenerics(node *PackageNode, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, params *LineStringBuilder, emittedTypeParamClass map[string]struct{}, emittedParamLink map[string]struct{}, depth int) {
+	if node == nil {
+		return
+	}
+
+	// Render this package's namespace using the short name
+	str.WriteLineWithDepth(depth, fmt.Sprintf(`namespace %s {`, node.Name))
+
+	// Render structures in this package using the full path
+	if structures, exists := p.structure[node.FullPath]; exists {
+		p.renderStructuresInPackageWithGenerics(node.FullPath, structures, str, depth+1, composition, extends, aggregations, params, emittedTypeParamClass, emittedParamLink)
+	}
+
+	// Render child packages
+	var childNames []string
+	for _, child := range node.Children {
+		childNames = append(childNames, child.FullPath)
+	}
+	sort.Strings(childNames)
+
+	for _, childPath := range childNames {
+		p.renderPackageNodeWithGenerics(node.Children[childPath], str, composition, extends, aggregations, params, emittedTypeParamClass, emittedParamLink, depth+1)
 	}
 
 	// Close namespace
@@ -737,7 +880,7 @@ func (p *ClassParser) renderPackageNode(node *PackageNode, str *LineStringBuilde
 }
 
 // renderStructuresInPackage renders structures within a package namespace
-func (p *ClassParser) renderStructuresInPackage(pack string, structures map[string]*Struct, str *LineStringBuilder, depth int, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) {
+func (p *ClassParser) renderStructuresInPackage(pack string, structures map[string]*Struct, str *LineStringBuilder, depth int, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, params *LineStringBuilder) {
 	if len(structures) > 0 {
 		names := []string{}
 		for name := range structures {
@@ -747,7 +890,36 @@ func (p *ClassParser) renderStructuresInPackage(pack string, structures map[stri
 
 		for _, name := range names {
 			structure := structures[name]
-			p.renderStructure(structure, pack, name, str, composition, extends, aggregations)
+			p.renderStructure(structure, pack, name, str, composition, extends, aggregations, params)
+		}
+
+		// Render renamed structs if any
+		var orderedRenamedStructs []string
+		for tempName := range p.allRenamedStructs[pack] {
+			orderedRenamedStructs = append(orderedRenamedStructs, tempName)
+		}
+		sort.Strings(orderedRenamedStructs)
+		for _, tempName := range orderedRenamedStructs {
+			name := p.allRenamedStructs[pack][tempName]
+			str.WriteLineWithDepth(depth, fmt.Sprintf(`class "%s" as %s {`, name, tempName))
+			str.WriteLineWithDepth(depth+1, aliasComplexNameComment)
+			str.WriteLineWithDepth(depth, "}")
+		}
+	}
+}
+
+// Generic-aware variant
+func (p *ClassParser) renderStructuresInPackageWithGenerics(pack string, structures map[string]*Struct, str *LineStringBuilder, depth int, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, params *LineStringBuilder, emittedTypeParamClass map[string]struct{}, emittedParamLink map[string]struct{}) {
+	if len(structures) > 0 {
+		names := []string{}
+		for name := range structures {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+
+		for _, name := range names {
+			structure := structures[name]
+			p.renderStructureWithGenerics(structure, pack, name, str, composition, extends, aggregations, params, emittedTypeParamClass, emittedParamLink)
 		}
 
 		// Render renamed structs if any
@@ -770,6 +942,7 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 		composition := &LineStringBuilder{}
 		extends := &LineStringBuilder{}
 		aggregations := &LineStringBuilder{}
+		params := &LineStringBuilder{}
 		str.WriteLineWithDepth(0, fmt.Sprintf(`namespace %s {`, pack))
 
 		names := []string{}
@@ -781,7 +954,7 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 
 		for _, name := range names {
 			structure := structures[name]
-			p.renderStructure(structure, pack, name, str, composition, extends, aggregations)
+			p.renderStructure(structure, pack, name, str, composition, extends, aggregations, params)
 		}
 		var orderedRenamedStructs []string
 		for tempName := range p.allRenamedStructs[pack] {
@@ -804,6 +977,8 @@ func (p *ClassParser) renderStructures(pack string, structures map[string]*Struc
 		if p.renderingOptions.Aggregations {
 			str.WriteLineWithDepth(0, aggregations.String())
 		}
+		// Always render generic parameter relationships at the end
+		str.WriteLineWithDepth(0, params.String())
 	}
 }
 
@@ -833,7 +1008,7 @@ func (p *ClassParser) renderAliases(str *LineStringBuilder) {
 	}
 }
 
-func (p *ClassParser) renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder) {
+func (p *ClassParser) renderStructure(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, params *LineStringBuilder) {
 
 	privateFields := &LineStringBuilder{}
 	publicFields := &LineStringBuilder{}
@@ -849,7 +1024,18 @@ func (p *ClassParser) renderStructure(structure *Struct, pack string, name strin
 		renderStructureType = "class"
 
 	}
-	str.WriteLineWithDepth(1, fmt.Sprintf(`%s %s %s {`, renderStructureType, name, sType))
+	// Build display name including type parameters if present
+	displayName := name
+	if len(structure.TypeParameters) > 0 {
+		paramNames := make([]string, 0, len(structure.TypeParameters))
+		for _, tp := range structure.TypeParameters {
+			paramNames = append(paramNames, tp.Name)
+		}
+		displayName = fmt.Sprintf("%s[%s]", name, strings.Join(paramNames, ", "))
+		// Generic stereotype
+		sType = "<<generic>>"
+	}
+	str.WriteLineWithDepth(1, fmt.Sprintf(`%s "%s" %s {`, renderStructureType, displayName, sType))
 	p.renderStructFields(structure, privateFields, publicFields)
 	p.renderStructMethods(structure, privateMethods, publicMethods)
 	p.renderCompositions(structure, name, composition)
@@ -868,6 +1054,84 @@ func (p *ClassParser) renderStructure(structure *Struct, pack string, name strin
 		str.WriteLineWithDepth(0, publicMethods.String())
 	}
 	str.WriteLineWithDepth(1, "}")
+
+	// Render type parameter classes and enqueue relationships
+	if len(structure.TypeParameters) > 0 {
+		for _, tp := range structure.TypeParameters {
+			// Type parameter class
+			str.WriteLineWithDepth(1, fmt.Sprintf(`class "%s" <<type parameter>> {`, tp.Name))
+			str.WriteLineWithDepth(2, fmt.Sprintf(`constraints: %s`, tp.Constraints))
+			str.WriteLineWithDepth(1, "}")
+			// Relationship: "T" <-- "param" "Model[T]"
+			params.WriteLineWithDepth(0, fmt.Sprintf(`"%s" <-- "param" "%s"`, tp.Name, displayName))
+		}
+	}
+}
+
+// Bridge: generic-aware structure renderer using the existing renderStructure plus dedupe for params/classes
+func (p *ClassParser) renderStructureWithGenerics(structure *Struct, pack string, name string, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, params *LineStringBuilder, emittedTypeParamClass map[string]struct{}, emittedParamLink map[string]struct{}) {
+	// Render the main structure and its standard relations
+	privateFields := &LineStringBuilder{}
+	publicFields := &LineStringBuilder{}
+	privateMethods := &LineStringBuilder{}
+	publicMethods := &LineStringBuilder{}
+	sType := ""
+	renderStructureType := structure.Type
+	switch structure.Type {
+	case "class":
+		sType = "<< (S,Aquamarine) >>"
+	case "alias":
+		sType = "<< (T, #FF7700) >> "
+		renderStructureType = "class"
+
+	}
+	// Build display name including type parameters if present
+	displayName := name
+	if len(structure.TypeParameters) > 0 {
+		paramNames := make([]string, 0, len(structure.TypeParameters))
+		for _, tp := range structure.TypeParameters {
+			paramNames = append(paramNames, tp.Name)
+		}
+		displayName = fmt.Sprintf("%s[%s]", name, strings.Join(paramNames, ", "))
+		// Generic stereotype
+		sType = "<<generic>>"
+	}
+	str.WriteLineWithDepth(1, fmt.Sprintf(`%s "%s" %s {`, renderStructureType, displayName, sType))
+	p.renderStructFields(structure, privateFields, publicFields)
+	p.renderStructMethods(structure, privateMethods, publicMethods)
+	p.renderCompositions(structure, name, composition)
+	p.renderExtends(structure, name, extends)
+	p.renderAggregations(structure, name, aggregations)
+	if privateFields.Len() > 0 {
+		str.WriteLineWithDepth(0, privateFields.String())
+	}
+	if publicFields.Len() > 0 {
+		str.WriteLineWithDepth(0, publicFields.String())
+	}
+	if privateMethods.Len() > 0 {
+		str.WriteLineWithDepth(0, privateMethods.String())
+	}
+	if publicMethods.Len() > 0 {
+		str.WriteLineWithDepth(0, publicMethods.String())
+	}
+	str.WriteLineWithDepth(1, "}")
+
+	// Render type parameter classes and enqueue relationships (deduped)
+	if len(structure.TypeParameters) > 0 {
+		for _, tp := range structure.TypeParameters {
+			if _, ok := emittedTypeParamClass[tp.Name]; !ok {
+				str.WriteLineWithDepth(1, fmt.Sprintf(`class "%s" <<type parameter>> {`, tp.Name))
+				str.WriteLineWithDepth(2, fmt.Sprintf(`constraints: %s`, tp.Constraints))
+				str.WriteLineWithDepth(1, "}")
+				emittedTypeParamClass[tp.Name] = struct{}{}
+			}
+			linkKey := tp.Name + "<-" + displayName
+			if _, ok := emittedParamLink[linkKey]; !ok {
+				params.WriteLineWithDepth(0, fmt.Sprintf(`"%s" <-- "param" "%s"`, tp.Name, displayName))
+				emittedParamLink[linkKey] = struct{}{}
+			}
+		}
+	}
 }
 
 func (p *ClassParser) renderCompositions(structure *Struct, name string, composition *LineStringBuilder) {
