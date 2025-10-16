@@ -1,17 +1,13 @@
 @startuml
-namespace subfolder2 {
     class "Subfolder2" << (S,Aquamarine) >> {
         + SubfolderFunction(b bool, i int) bool
         + SubfolderFunctionWithReturnListParametrized() ([]byte, []byte, []byte, error)
 
     }
-}
-namespace subfolder3 {
     interface "SubfolderInterface"  {
         + SubfolderFunction( bool,  int) bool
 
     }
-}
 
 "subfolder3.SubfolderInterface" <|-- "subfolder2.Subfolder2"
 

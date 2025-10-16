@@ -486,7 +486,7 @@ func TestNewClassDiagram(t *testing.T) {
 					Exists: true,
 				},
 				{
-					Name:   "testingsupport.subfolder.test2",
+					Name:   "subfolder.test2",
 					Type:   "interface",
 					Exists: true,
 				},
@@ -508,7 +508,7 @@ func TestNewClassDiagram(t *testing.T) {
 					Exists: true,
 				},
 				{
-					Name:   "testingsupport.subfolder.test2",
+					Name:   "subfolder.test2",
 					Type:   "interface",
 					Exists: false,
 				},
@@ -609,7 +609,7 @@ func TestIgnoreDirectories(t *testing.T) {
 		t.Errorf("TestIgnoreDirectories: expected no errors, got %s", err.Error())
 		return
 	}
-	st := parser.getStruct("testingsupport.subfolder2.Subfolder2")
+	st := parser.getStruct("subfolder2.Subfolder2")
 	if st == nil {
 		t.Errorf("TestIgnoreDirectories: expected st to not be nil, got %v", st)
 		return
@@ -621,7 +621,7 @@ func TestIgnoreDirectories(t *testing.T) {
 		t.Errorf("TestIgnoreDirectories: expected no errors, got %s", err.Error())
 		return
 	}
-	st = parser.getStruct("testingsupport.subfolder2.Subfolder2")
+	st = parser.getStruct("subfolder2.Subfolder2")
 	if st != nil {
 		t.Errorf("TestIgnoreDirectories: expected st to be nil, got %v", st)
 		return
@@ -717,6 +717,10 @@ func TestRenderCompositionFromInterfaces(t *testing.T) {
 		return
 	}
 	st := parser.getStruct("subfolder.test2")
+	if st == nil {
+		t.Errorf("TestRenderCompositionFromInterfaces: expected to find subfolder.test2 struct, got nil")
+		return
+	}
 	if _, ok := st.Composition["subfolder.TestInterfaceAsField"]; !ok {
 		t.Errorf("TestRenderCompositionFromInterfaces: expected st to have a composition dependency to subfolder.TestInterfaceAsField")
 	}
@@ -833,14 +837,12 @@ func TestRenderingOptions(t *testing.T) {
 				RenderPrivateMembers: true,
 			},
 			ExpectedResult: `@startuml
-namespace renderingoptions {
     class "Test" << (S,Aquamarine) >> {
         - integer int
 
         - function() 
 
     }
-}
 
 
 
@@ -854,14 +856,12 @@ namespace renderingoptions {
 				RenderPrivateMembers: true,
 			},
 			ExpectedResult: `@startuml
-namespace renderingoptions {
     class "Test" << (S,Aquamarine) >> {
         - integer int
 
         - function() 
 
     }
-}
 
 
 
@@ -876,14 +876,12 @@ hide fields
 				RenderPrivateMembers: true,
 			},
 			ExpectedResult: `@startuml
-namespace renderingoptions {
     class "Test" << (S,Aquamarine) >> {
         - integer int
 
         - function() 
 
     }
-}
 
 
 
@@ -897,14 +895,12 @@ namespace renderingoptions {
 				RenderPrivateMembers: true,
 			},
 			ExpectedResult: `@startuml
-namespace renderingoptions {
     class "Test" << (S,Aquamarine) >> {
         - integer int
 
         - function() 
 
     }
-}
 
 
 
@@ -916,10 +912,8 @@ hide methods
 			InputFolder:      "../testingsupport/renderingoptions",
 			RenderingOptions: map[RenderingOption]interface{}{},
 			ExpectedResult: `@startuml
-namespace renderingoptions {
     class "Test" << (S,Aquamarine) >> {
     }
-}
 
 
 
@@ -969,7 +963,6 @@ func TestConnectionLabelsRendering(t *testing.T) {
 	})
 	result := parser.Render()
 	expectedResult := `@startuml
-namespace connectionlabels {
     interface "AbstractInterface"  {
         - interfaceFunction() bool
 
@@ -982,7 +975,6 @@ namespace connectionlabels {
     }
     class "connectionlabels.AliasOfInt" << (T, #FF7700) >>  {
     }
-}
 "__builtin__.int" #.. "alias of""connectionlabels.AliasOfInt"
 "connectionlabels.AliasOfInt" *-- "extends""connectionlabels.ImplementsAbstractInterface"
 
@@ -1042,7 +1034,6 @@ func TestParametrizedTypeDeclarations(t *testing.T) {
 	parser.SetRenderingOptions(map[RenderingOption]interface{}{})
 	result := parser.Render()
 	expectedResult := `@startuml
-namespace parenthesizedtypedeclarations {
     interface "Bar"  {
         + Bar() 
 
@@ -1051,7 +1042,6 @@ namespace parenthesizedtypedeclarations {
         + Foo() 
 
     }
-}
 
 
 
@@ -1072,10 +1062,8 @@ func TestNamedImportsInAnonymousFields(t *testing.T) {
 	parser.SetRenderingOptions(map[RenderingOption]interface{}{})
 	result := parser.Render()
 	expectedResult := `@startuml
-namespace namedimports {
     class "MyType" << (S,Aquamarine) >> {
     }
-}
 "time.Duration" *-- "namedimports.MyType"
 
 

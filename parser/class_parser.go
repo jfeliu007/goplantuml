@@ -270,23 +270,36 @@ func NewClassDiagramWithMaxDepth(options *ClassDiagramOptions) (*ClassParser, er
 
 // getOrCreatePackageNode creates or retrieves a package node in the hierarchy
 func (p *ClassParser) getOrCreatePackageNode(dirPath string) *PackageNode {
+	// For backward compatibility, use directory name as package name
+	return p.getOrCreatePackageNodeWithName(dirPath, filepath.Base(dirPath))
+}
+
+// getOrCreatePackageNodeWithName creates or retrieves a package node with explicit package name
+func (p *ClassParser) getOrCreatePackageNodeWithName(dirPath string, goPackageName string) *PackageNode {
 	// Calculate the package path relative to the root directories
-	packagePath := p.calculatePackagePath(dirPath)
+	dirBasedPath := p.calculatePackagePath(dirPath)
+	
+	// Build the actual package path using the Go package name
+	var packagePath string
+	if dirBasedPath == "root" || dirBasedPath == "." {
+		// This is a top-level package, use just the Go package name
+		packagePath = goPackageName
+	} else if strings.Contains(dirBasedPath, ".") {
+		// Nested package: replace last component with Go package name
+		parts := strings.Split(dirBasedPath, ".")
+		parts[len(parts)-1] = goPackageName
+		packagePath = strings.Join(parts, ".")
+	} else {
+		// Single level package
+		packagePath = goPackageName
+	}
 
 	if node, exists := p.packageHierarchy[packagePath]; exists {
 		return node
 	}
 
-	// Create new package node
-	// Use the last component of the package path as the display name
-	displayName := filepath.Base(dirPath)
-	if strings.Contains(packagePath, ".") {
-		parts := strings.Split(packagePath, ".")
-		displayName = parts[len(parts)-1]
-	}
-
 	node := &PackageNode{
-		Name:       displayName,
+		Name:       goPackageName,
 		FullPath:   packagePath,
 		Children:   make(map[string]*PackageNode),
 		Structures: make(map[string]*Struct),
@@ -388,17 +401,15 @@ func (p *ClassParser) calculatePackagePath(dirPath string) string {
 
 	// Convert path separators to dots for package naming
 	packagePath := strings.ReplaceAll(relPath, string(filepath.Separator), ".")
+	
+	// If we're at the root directory (packagePath == "."), return "root" as a placeholder
+	// This shouldn't normally be rendered as packages at root typically have subdirectories
 	if packagePath == "." {
-		return filepath.Base(shortestRoot)
+		return "root"
 	}
 
-	// Always prepend root directory name for consistency in hierarchical rendering
-	// This ensures parent-child relationships work correctly
-	rootName := filepath.Base(shortestRoot)
-	if packagePath != "" && rootName != "." {
-		return rootName + "." + packagePath
-	}
-
+	// Return the package path without prepending root directory name
+	// The root directory is just where we start scanning, not part of the package hierarchy
 	return packagePath
 }
 
@@ -419,8 +430,13 @@ func (p *ClassParser) getRootDirectories() []string {
 func (p *ClassParser) parsePackage(node ast.Node) {
 	pack := node.(*ast.Package)
 
-	// Create package node for this directory
-	packageNode := p.getOrCreatePackageNode(p.currentDirPath)
+	// Use the actual Go package name from the code, not the directory name
+	// This ensures the diagram reflects actual package names in the code
+	goPackageName := pack.Name
+	
+	// Create package node using directory structure for hierarchy
+	// but we'll use the Go package name for display
+	packageNode := p.getOrCreatePackageNodeWithName(p.currentDirPath, goPackageName)
 	if packageNode == nil {
 		return // Skip if depth limit exceeded
 	}
@@ -895,7 +911,28 @@ func (p *ClassParser) renderPackageNode(node *PackageNode, str *LineStringBuilde
 		return
 	}
 
-	// Render this package's namespace using the short name
+	// For root-level packages (depth 0), don't render namespace wrapper
+	// Just render structures and child packages directly at diagram root
+	if depth == 0 {
+		// Render structures in this package at root level
+		if structures, exists := p.structure[node.FullPath]; exists {
+			p.renderStructuresInPackage(node.FullPath, structures, str, depth, composition, extends, aggregations, params)
+		}
+
+		// Render child packages (they will have namespace wrappers)
+		var childNames []string
+		for _, child := range node.Children {
+			childNames = append(childNames, child.FullPath)
+		}
+		sort.Strings(childNames)
+
+		for _, childPath := range childNames {
+			p.renderPackageNode(node.Children[childPath], str, composition, extends, aggregations, params, depth)
+		}
+		return
+	}
+
+	// For nested packages, render with namespace wrapper
 	str.WriteLineWithDepth(depth, fmt.Sprintf(`namespace %s {`, node.Name))
 
 	// Render structures in this package using the full path
@@ -929,7 +966,28 @@ func (p *ClassParser) renderPackageNodeWithGenerics(node *PackageNode, str *Line
 		return
 	}
 
-	// Render this package's namespace using the short name
+	// For root-level packages (depth 0), don't render namespace wrapper
+	// Just render structures and child packages directly at diagram root
+	if depth == 0 {
+		// Render structures in this package at root level
+		if structures, exists := p.structure[node.FullPath]; exists {
+			p.renderStructuresInPackageWithGenerics(node.FullPath, structures, str, depth, composition, extends, aggregations, params, emittedTypeParamClass, emittedParamLink)
+		}
+
+		// Render child packages (they will have namespace wrappers)
+		var childNames []string
+		for _, child := range node.Children {
+			childNames = append(childNames, child.FullPath)
+		}
+		sort.Strings(childNames)
+
+		for _, childPath := range childNames {
+			p.renderPackageNodeWithGenerics(node.Children[childPath], str, composition, extends, aggregations, params, emittedTypeParamClass, emittedParamLink, depth)
+		}
+		return
+	}
+
+	// For nested packages, render with namespace wrapper
 	str.WriteLineWithDepth(depth, fmt.Sprintf(`namespace %s {`, node.Name))
 
 	// Render structures in this package using the full path
