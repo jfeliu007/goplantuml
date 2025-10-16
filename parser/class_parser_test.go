@@ -486,7 +486,7 @@ func TestNewClassDiagram(t *testing.T) {
 					Exists: true,
 				},
 				{
-					Name:   "subfolder.test2",
+					Name:   "testingsupport.subfolder.test2",
 					Type:   "interface",
 					Exists: true,
 				},
@@ -508,7 +508,7 @@ func TestNewClassDiagram(t *testing.T) {
 					Exists: true,
 				},
 				{
-					Name:   "subfolder.test2",
+					Name:   "testingsupport.subfolder.test2",
 					Type:   "interface",
 					Exists: false,
 				},
@@ -609,7 +609,7 @@ func TestIgnoreDirectories(t *testing.T) {
 		t.Errorf("TestIgnoreDirectories: expected no errors, got %s", err.Error())
 		return
 	}
-	st := parser.getStruct("subfolder2.Subfolder2")
+	st := parser.getStruct("testingsupport.subfolder2.Subfolder2")
 	if st == nil {
 		t.Errorf("TestIgnoreDirectories: expected st to not be nil, got %v", st)
 		return
@@ -621,7 +621,7 @@ func TestIgnoreDirectories(t *testing.T) {
 		t.Errorf("TestIgnoreDirectories: expected no errors, got %s", err.Error())
 		return
 	}
-	st = parser.getStruct("subfolder2.Subfolder2")
+	st = parser.getStruct("testingsupport.subfolder2.Subfolder2")
 	if st != nil {
 		t.Errorf("TestIgnoreDirectories: expected st to be nil, got %v", st)
 		return

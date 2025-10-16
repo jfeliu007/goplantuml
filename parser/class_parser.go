@@ -251,20 +251,20 @@ func populateInterfaceImplementations(classParser *ClassParser) {
 // NewClassDiagram returns a new classParser with which can Render the class diagram of
 // files in the given directory
 func NewClassDiagram(directoryPaths []string, ignoreDirectories []string, recursive bool) (*ClassParser, error) {
-	return NewClassDiagramWithMaxDepth(directoryPaths, ignoreDirectories, recursive, 0)
-}
-
-// NewClassDiagramWithMaxDepth returns a new classParser with which can Render the class diagram of
-// files in the given directory with a maximum nesting depth
-func NewClassDiagramWithMaxDepth(directoryPaths []string, ignoreDirectories []string, recursive bool, maxDepth int) (*ClassParser, error) {
 	options := &ClassDiagramOptions{
 		Directories:        directoryPaths,
 		IgnoredDirectories: ignoreDirectories,
 		Recursive:          recursive,
 		RenderingOptions:   map[RenderingOption]interface{}{},
 		FileSystem:         afero.NewOsFs(),
-		MaxDepth:           maxDepth,
+		MaxDepth:           0,
 	}
+	return NewClassDiagramWithMaxDepth(options)
+}
+
+// NewClassDiagramWithMaxDepth returns a new classParser with which can Render the class diagram of
+// files in the given directory with a maximum nesting depth
+func NewClassDiagramWithMaxDepth(options *ClassDiagramOptions) (*ClassParser, error) {
 	return NewClassDiagramWithOptions(options)
 }
 
@@ -298,10 +298,12 @@ func (p *ClassParser) getOrCreatePackageNode(dirPath string) *PackageNode {
 		return nil
 	}
 
+	// Store node first before establishing relationships
+	p.packageHierarchy[packagePath] = node
+
 	// Establish parent-child relationships
 	p.establishParentChildRelationships(node)
 
-	p.packageHierarchy[packagePath] = node
 	return node
 }
 
@@ -390,32 +392,8 @@ func (p *ClassParser) calculatePackagePath(dirPath string) string {
 		return filepath.Base(shortestRoot)
 	}
 
-	// Check if we're at the project root level (no nesting)
-	// If the relative path doesn't contain separators, we're at the top level
-	if !strings.Contains(relPath, string(filepath.Separator)) {
-		return packagePath
-	}
-
-	// Special case: if we're processing the project root (current directory)
-	// and the path contains testingsupport or cmd, we want to preserve the nesting
-	// This handles the case where these are subdirectories of the project
-	if strings.HasPrefix(relPath, "testingsupport") || strings.HasPrefix(relPath, "cmd") {
-		return packagePath
-	}
-
-	// Special case: if we're processing cmd/goplantuml, it should be treated as cmd.goplantuml
-	// not as a separate root package
-	if strings.HasPrefix(relPath, "cmd/goplantuml") {
-		return "cmd.goplantuml"
-	}
-
-	// Special case: if we're processing cmd directory, it should be treated as cmd
-	if strings.HasPrefix(relPath, "cmd/") {
-		return "cmd"
-	}
-
-	// Only prepend root directory name if we're not at the root level
-	// and if the root directory is not "." (current directory)
+	// Always prepend root directory name for consistency in hierarchical rendering
+	// This ensures parent-child relationships work correctly
 	rootName := filepath.Base(shortestRoot)
 	if packagePath != "" && rootName != "." {
 		return rootName + "." + packagePath
@@ -885,9 +863,35 @@ func (p *ClassParser) renderHierarchicalPackages(str *LineStringBuilder, composi
 	}
 }
 
+// hasContent checks if a package node or any of its descendants have structures
+func (p *ClassParser) hasContent(node *PackageNode) bool {
+	if node == nil {
+		return false
+	}
+
+	// Check if this node has structures
+	if structures, exists := p.structure[node.FullPath]; exists && len(structures) > 0 {
+		return true
+	}
+
+	// Check if any children have content
+	for _, child := range node.Children {
+		if p.hasContent(child) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // renderPackageNode renders a package node and its children recursively
 func (p *ClassParser) renderPackageNode(node *PackageNode, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, params *LineStringBuilder, depth int) {
 	if node == nil {
+		return
+	}
+
+	// Skip rendering if this node and all descendants are empty
+	if !p.hasContent(node) {
 		return
 	}
 
@@ -917,6 +921,11 @@ func (p *ClassParser) renderPackageNode(node *PackageNode, str *LineStringBuilde
 // Generic-aware variant
 func (p *ClassParser) renderPackageNodeWithGenerics(node *PackageNode, str *LineStringBuilder, composition *LineStringBuilder, extends *LineStringBuilder, aggregations *LineStringBuilder, params *LineStringBuilder, emittedTypeParamClass map[string]struct{}, emittedParamLink map[string]struct{}, depth int) {
 	if node == nil {
+		return
+	}
+
+	// Skip rendering if this node and all descendants are empty
+	if !p.hasContent(node) {
 		return
 	}
 
@@ -1370,12 +1379,24 @@ func (p *ClassParser) getOrCreateStruct(name string) *Struct {
 
 // Returns an existing struct only if it was created. nil otherwhise
 func (p *ClassParser) getStruct(structName string) *Struct {
-	split := strings.SplitN(structName, ".", 2)
-	pack, ok := p.structure[split[0]]
-	if !ok {
-		return nil
+	// Try to find the struct by iterating through packages
+	// The structName might be like "testingsupport.subfolder.test2"
+	// We need to find which part is the package and which is the struct name
+	
+	// Try progressively longer package paths
+	parts := strings.Split(structName, ".")
+	for i := len(parts) - 1; i > 0; i-- {
+		packagePath := strings.Join(parts[:i], ".")
+		structName := parts[i]
+		
+		if pack, ok := p.structure[packagePath]; ok {
+			if st, ok := pack[structName]; ok {
+				return st
+			}
+		}
 	}
-	return pack[split[1]]
+	
+	return nil
 }
 
 // SetRenderingOptions Sets the rendering options for the Render() Function

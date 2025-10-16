@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/spf13/afero"
+
 	goplantuml "github.com/jfeliu007/goplantuml/parser"
 )
 
@@ -101,8 +103,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	result, err := goplantuml.NewClassDiagramWithMaxDepth(dirs, ignoredDirectories, *recursive, *maxDepth)
-	result.SetRenderingOptions(renderingOptions)
+	options := &goplantuml.ClassDiagramOptions{
+		Directories:        dirs,
+		IgnoredDirectories: ignoredDirectories,
+		Recursive:          *recursive,
+		MaxDepth:           *maxDepth,
+		RenderingOptions:   renderingOptions,
+		FileSystem:         afero.NewOsFs(),
+	}
+	result, err := goplantuml.NewClassDiagramWithMaxDepth(options)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
