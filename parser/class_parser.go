@@ -586,11 +586,11 @@ func (p *ClassParser) processSpec(spec ast.Spec) {
 	}
 
 	typeName, declarationType, alias := p.processTypeSpec(typeSpec)
-	
+
 	if structure := p.getOrCreateStruct(typeName); structure != nil {
 		structure.Type = declarationType
 	}
-	
+
 	p.registerDeclaration(typeName, declarationType, alias)
 }
 
@@ -635,18 +635,18 @@ func (p *ClassParser) processAliasType(typeSpec *ast.TypeSpec, typeName string, 
 	basicType, _ := getFieldType(getBasicType(typeExpr), p.allImports)
 	aliasType, _ := getFieldType(typeExpr, p.allImports)
 	aliasType = replacePackageConstant(aliasType, "")
-	
+
 	// For aliases, we need to create the full name with package
 	fullTypeName := typeName
 	if !isPrimitiveString(typeName) {
 		fullTypeName = fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
 	}
-	
+
 	packageName := p.currentPackageName
 	if isPrimitiveString(basicType) {
 		packageName = builtinPackageName
 	}
-	
+
 	return getNewAlias(fmt.Sprintf("%s.%s", packageName, aliasType), p.currentPackageName, fullTypeName)
 }
 
@@ -662,7 +662,7 @@ func (p *ClassParser) parseGenericTypeParameters(typeSpec *ast.TypeSpec, typeNam
 // registerDeclaration registers the declaration in the appropriate collections
 func (p *ClassParser) registerDeclaration(typeName, declarationType string, alias *Alias) {
 	fullName := fmt.Sprintf("%s.%s", p.currentPackageName, typeName)
-	
+
 	switch declarationType {
 	case "interface":
 		p.allInterfaces[fullName] = struct{}{}
@@ -1370,12 +1370,15 @@ func (p *ClassParser) getOrCreateStruct(name string) *Struct {
 
 // Returns an existing struct only if it was created. nil otherwhise
 func (p *ClassParser) getStruct(structName string) *Struct {
-	split := strings.SplitN(structName, ".", 2)
-	pack, ok := p.structure[split[0]]
+	lastDot := strings.LastIndex(structName, ".")
+	if lastDot == -1 {
+		return nil
+	}
+	pack, ok := p.structure[structName[:lastDot]]
 	if !ok {
 		return nil
 	}
-	return pack[split[1]]
+	return pack[structName[lastDot+1:]]
 }
 
 // SetRenderingOptions Sets the rendering options for the Render() Function
