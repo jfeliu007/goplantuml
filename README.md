@@ -4,10 +4,34 @@
 [![DUMELS Diagram](https://server.dumels.com/api/v1/badge/23ff0222-e93b-4e9f-a4ef-4d5d9b7a5c7d)](https://www.dumels.com/shdv/p/0497cfda-9623-4c02-8aea-ac040817c128) 
 # GoPlantUML V2
 
-GoPlantUML is an open-source tool developed to streamline the process of generating PlantUML diagrams from Go source code. With GoPlantUML, developers can effortlessly visualize the structure and relationships within their Go projects, aiding in code comprehension and documentation. By parsing Go source code and producing PlantUML diagrams, GoPlantUML empowers developers to create clear and concise visual representations of their codebase architecture, package dependencies, and function interactions. This tool simplifies the documentation process and enhances collaboration among team members by providing a visual overview of complex Go projects. GoPlantUML is actively maintained and welcomes contributions from the Go community.
+GoPlantUML is an open-source library and CLI that generates PlantUML class diagrams from Go source code. Visualize structs, interfaces, fields, methods, and relationships to explore unfamiliar code or document a project.
 
-## Want to try it on your code? 
-Take a look at [www.dumels.com](https://www.dumels.com). We have created dumels using this library. 
+## Try it online — free, no login required
+
+[Dumels](https://www.dumels.com) uses GoPlantUML to generate
+interactive diagrams from public GitHub Go repositories—without
+installing the CLI or configuring a PlantUML renderer.
+
+Enter a repository URL to explore its structure and relationships.
+Diagrams are derived consistently from the code, giving you a
+reproducible structural view alongside your other development tools.
+
+> Diagrams created from the homepage are public and may be editable
+> by others. Only use this option for content you’re comfortable
+> making public.
+
+### Local tool or hosted app?
+
+- **GoPlantUML CLI:** Generate PlantUML from local source files and
+  control rendering yourself. See installation and usage below.
+- **Dumels, without an account:** Try a public repository immediately
+  and get a public diagram link.
+- **Dumels, with a free account:** Manage your own diagrams, create
+  multiple views of a repository, and share read-only public links.
+
+Connect your GitHub account to generate diagrams from your private
+repositories, or link pull requests to visualize the structure of
+their changes.
 
 ## Code of Conduct
 Please, review the code of conduct [here](https://github.com/jfeliu007/goplantuml/blob/master/CODE_OF_CONDUCT.md "here").
